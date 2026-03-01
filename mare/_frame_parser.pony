@@ -21,7 +21,7 @@ class _FrameParser
     let frames = recover iso Array[_ParsedFrame val] end
 
     while _buf.size() > 0 do
-      match _try_parse_frame()
+      match \exhaustive\ _try_parse_frame()
       | let frame: _ParsedFrame val =>
         frames.push(frame)
       | let err: _FrameError =>

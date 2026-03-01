@@ -29,7 +29,7 @@ class _HandshakeParser
       return HandshakeRequestTooLarge
     end
 
-    match _find_header_end()
+    match \exhaustive\ _find_header_end()
     | None => _HandshakeNeedMore
     | let pos: USize => _parse_request(pos)
     end
@@ -133,13 +133,13 @@ class _HandshakeParser
       if not has_upgrade then return HandshakeMissingUpgrade end
       if not has_connection_upgrade then return HandshakeMissingUpgrade end
 
-      match websocket_version
+      match \exhaustive\ websocket_version
       | let v: String val =>
         if v != "13" then return HandshakeWrongVersion end
       | None => return HandshakeWrongVersion
       end
 
-      match websocket_key
+      match \exhaustive\ websocket_key
       | let key: String val =>
         let decoded_size =
           try
