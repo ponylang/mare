@@ -102,7 +102,7 @@ class \nodoc\ iso _TestFrameParserText is UnitTest
     let frame = _TestFrameHelper.masked_frame(
       true, 0x01, "Hello".array())
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_true(frames(0)?.fin)
@@ -120,7 +120,7 @@ class \nodoc\ iso _TestFrameParserBinary is UnitTest
     let payload: Array[U8] val = recover val [as U8: 0x01; 0x02; 0x03] end
     let frame = _TestFrameHelper.masked_frame(true, 0x02, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x02, frames(0)?.opcode)
@@ -138,7 +138,7 @@ class \nodoc\ iso _TestFrameParserPing is UnitTest
     let payload: Array[U8] val = recover val [as U8: 0xAA; 0xBB] end
     let frame = _TestFrameHelper.masked_frame(true, 0x09, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x09, frames(0)?.opcode)
@@ -154,7 +154,7 @@ class \nodoc\ iso _TestFrameParserPong is UnitTest
     let frame = _TestFrameHelper.masked_frame(
       true, 0x0A, recover val Array[U8] end)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x0A, frames(0)?.opcode)
@@ -171,7 +171,7 @@ class \nodoc\ iso _TestFrameParserCloseWithCode is UnitTest
       recover val [as U8: 0x03; 0xE8; 'b'; 'y'; 'e'] end
     let frame = _TestFrameHelper.masked_frame(true, 0x08, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x08, frames(0)?.opcode)
@@ -190,7 +190,7 @@ class \nodoc\ iso _TestFrameParserCloseEmpty is UnitTest
     let frame = _TestFrameHelper.masked_frame(
       true, 0x08, recover val Array[U8] end)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x08, frames(0)?.opcode)
@@ -206,7 +206,7 @@ class \nodoc\ iso _TestFrameParserCloseOneByte is UnitTest
     let payload: Array[U8] val = recover val [as U8: 0x03] end
     let frame = _TestFrameHelper.masked_frame(true, 0x08, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for 1-byte close payload")
     | let err: _FrameError =>
@@ -223,7 +223,7 @@ class \nodoc\ iso _TestFrameParserCloseInvalidUtf8Reason is UnitTest
       recover val [as U8: 0x03; 0xE8; 0xFF] end
     let frame = _TestFrameHelper.masked_frame(true, 0x08, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for invalid UTF-8 in close reason")
     | let err: _FrameError =>
@@ -240,7 +240,7 @@ class \nodoc\ iso _TestFrameParserCloseValidUtf8Reason is UnitTest
       recover val [as U8: 0x03; 0xE8; 'O'; 'K'] end
     let frame = _TestFrameHelper.masked_frame(true, 0x08, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x08, frames(0)?.opcode)
@@ -260,7 +260,7 @@ class \nodoc\ iso _TestFrameParserLength16Bit is UnitTest
     end
     let frame = _TestFrameHelper.masked_frame(true, 0x02, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[USize](200, frames(0)?.payload.size())
@@ -281,7 +281,7 @@ class \nodoc\ iso _TestFrameParserLength64Bit is UnitTest
     end
     let frame = _TestFrameHelper.masked_frame(true, 0x02, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[USize](size, frames(0)?.payload.size())
@@ -309,7 +309,7 @@ class \nodoc\ iso _TestFrameParserLength64BitMsbSet is UnitTest
       f
     end
     let parser = _FrameParser
-    match parser.parse(raw)
+    match \exhaustive\ parser.parse(raw)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for 64-bit length with MSB set")
     | let err: _FrameError =>
@@ -324,7 +324,7 @@ class \nodoc\ iso _TestFrameParserUnmasked is UnitTest
     let frame = _TestFrameHelper.unmasked_frame(
       true, 0x01, "Hello".array())
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for unmasked frame")
     | let err: _FrameError =>
@@ -345,7 +345,7 @@ class \nodoc\ iso _TestFrameParserNonZeroRsv is UnitTest
       f
     end
     let parser = _FrameParser
-    match parser.parse(raw)
+    match \exhaustive\ parser.parse(raw)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for RSV bits")
     | let err: _FrameError =>
@@ -360,7 +360,7 @@ class \nodoc\ iso _TestFrameParserFragmentedControl is UnitTest
     let frame = _TestFrameHelper.masked_frame(
       false, 0x09, recover val Array[U8] end)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for fragmented control frame")
     | let err: _FrameError =>
@@ -380,7 +380,7 @@ class \nodoc\ iso _TestFrameParserControlTooLarge is UnitTest
     end
     let frame = _TestFrameHelper.masked_frame(true, 0x09, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for oversized control frame")
     | let err: _FrameError =>
@@ -395,7 +395,7 @@ class \nodoc\ iso _TestFrameParserUnknownOpcode is UnitTest
     let frame = _TestFrameHelper.masked_frame(
       true, 0x03, recover val Array[U8] end)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for unknown opcode")
     | let err: _FrameError =>
@@ -415,7 +415,7 @@ class \nodoc\ iso _TestFrameParserIncremental is UnitTest
     var i: USize = 0
     while i < (full_frame.size() - 1) do
       let byte: Array[U8] val = recover val [as U8: full_frame(i)?] end
-      match parser.parse(byte)
+      match \exhaustive\ parser.parse(byte)
       | let frames: Array[_ParsedFrame val] val =>
         h.assert_eq[USize](0, frames.size())
       | let err: _FrameError => h.fail("unexpected error at byte " +
@@ -426,7 +426,7 @@ class \nodoc\ iso _TestFrameParserIncremental is UnitTest
 
     // Feed last byte — should complete the frame
     let last: Array[U8] val = recover val [as U8: full_frame(i)?] end
-    match parser.parse(last)
+    match \exhaustive\ parser.parse(last)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x01, frames(0)?.opcode)
@@ -454,7 +454,7 @@ class \nodoc\ iso _TestFrameParserMultipleFrames is UnitTest
     end
 
     let parser = _FrameParser
-    match parser.parse(combined)
+    match \exhaustive\ parser.parse(combined)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](2, frames.size())
       h.assert_eq[U8](0x01, frames(0)?.opcode)
@@ -479,7 +479,7 @@ class \nodoc\ iso _TestFrameParserCloseValidCodes is Property1[U16]
       recover val [as U8: (code >> 8).u8(); code.u8()] end
     let frame = _TestFrameHelper.masked_frame(true, 0x08, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x08, frames(0)?.opcode)
@@ -507,7 +507,7 @@ class \nodoc\ iso _TestFrameParserCloseInvalidCodes is Property1[U16]
       recover val [as U8: (code >> 8).u8(); code.u8()] end
     let frame = _TestFrameHelper.masked_frame(true, 0x08, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.fail("expected error for invalid code " + code.string())
     | let err: _FrameError =>
@@ -543,7 +543,7 @@ class \nodoc\ iso _TestFrameParserCloseMixedCodes is Property1[U16]
       recover val [as U8: (code >> 8).u8(); code.u8()] end
     let frame = _TestFrameHelper.masked_frame(true, 0x08, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_true(valid, "code " + code.string() + " should be rejected")
     | let err: _FrameError =>
@@ -566,7 +566,7 @@ class \nodoc\ iso _TestFrameParserPropertyRandom is Property1[USize]
     end
     let frame = _TestFrameHelper.masked_frame(true, 0x02, payload)
     let parser = _FrameParser
-    match parser.parse(frame)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       h.assert_eq[U8](0x02, frames(0)?.opcode)

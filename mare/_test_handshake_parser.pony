@@ -43,7 +43,7 @@ class \nodoc\ iso _TestHandshakeValid is UnitTest
   fun apply(h: TestHelper) =>
     let parser = _HandshakeParser
     let data = _TestHandshakeHelper.valid_request()
-    match parser(consume data, 8192)
+    match \exhaustive\ parser(consume data, 8192)
     | let result: _HandshakeResult =>
       h.assert_eq[String]("/", result.request.uri)
       let expected_key =
@@ -72,7 +72,7 @@ class \nodoc\ iso _TestHandshakeRemainingBytes is UnitTest
       c
     end
     let parser = _HandshakeParser
-    match parser(consume combined, 8192)
+    match \exhaustive\ parser(consume combined, 8192)
     | let result: _HandshakeResult =>
       h.assert_eq[USize](2, result.remaining.size())
       h.assert_eq[U8](0x81, result.remaining(0)?)
@@ -88,7 +88,7 @@ class \nodoc\ iso _TestHandshakeTooLarge is UnitTest
   fun apply(h: TestHelper) =>
     let parser = _HandshakeParser
     let data = _TestHandshakeHelper.valid_request()
-    match parser(consume data, 10) // tiny max_size
+    match \exhaustive\ parser(consume data, 10) // tiny max_size
     | HandshakeRequestTooLarge => None // expected
     | _HandshakeNeedMore => h.fail("expected too large error")
     | let _: _HandshakeResult => h.fail("expected too large error")
@@ -112,7 +112,7 @@ class \nodoc\ iso _TestHandshakeInvalidMethod is UnitTest
       s.clone().iso_array()
     end
     let parser = _HandshakeParser
-    match parser(consume request, 8192)
+    match \exhaustive\ parser(consume request, 8192)
     | HandshakeInvalidHTTP => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
@@ -135,7 +135,7 @@ class \nodoc\ iso _TestHandshakeMissingHost is UnitTest
       s.clone().iso_array()
     end
     let parser = _HandshakeParser
-    match parser(consume request, 8192)
+    match \exhaustive\ parser(consume request, 8192)
     | HandshakeMissingHost => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
@@ -158,7 +158,7 @@ class \nodoc\ iso _TestHandshakeMissingUpgrade is UnitTest
       s.clone().iso_array()
     end
     let parser = _HandshakeParser
-    match parser(consume request, 8192)
+    match \exhaustive\ parser(consume request, 8192)
     | HandshakeMissingUpgrade => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
@@ -182,7 +182,7 @@ class \nodoc\ iso _TestHandshakeWrongVersion is UnitTest
       s.clone().iso_array()
     end
     let parser = _HandshakeParser
-    match parser(consume request, 8192)
+    match \exhaustive\ parser(consume request, 8192)
     | HandshakeWrongVersion => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
@@ -205,7 +205,7 @@ class \nodoc\ iso _TestHandshakeMissingKey is UnitTest
       s.clone().iso_array()
     end
     let parser = _HandshakeParser
-    match parser(consume request, 8192)
+    match \exhaustive\ parser(consume request, 8192)
     | HandshakeMissingKey => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
@@ -220,7 +220,7 @@ class \nodoc\ iso _TestHandshakeInvalidKeyBadBase64 is UnitTest
     let data = _TestHandshakeHelper.valid_request(
       where key = "!!!invalid-key!!!!!!!!!==")
     let parser = _HandshakeParser
-    match parser(consume data, 8192)
+    match \exhaustive\ parser(consume data, 8192)
     | HandshakeInvalidKey => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
@@ -235,7 +235,7 @@ class \nodoc\ iso _TestHandshakeInvalidKeyWrongLength is UnitTest
     // "dGVzdA==" is base64 for "test" (4 bytes)
     let data = _TestHandshakeHelper.valid_request(where key = "dGVzdA==")
     let parser = _HandshakeParser
-    match parser(consume data, 8192)
+    match \exhaustive\ parser(consume data, 8192)
     | HandshakeInvalidKey => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
@@ -259,7 +259,7 @@ class \nodoc\ iso _TestHandshakeCaseInsensitive is UnitTest
       s.clone().iso_array()
     end
     let parser = _HandshakeParser
-    match parser(consume request, 8192)
+    match \exhaustive\ parser(consume request, 8192)
     | let result: _HandshakeResult =>
       h.assert_eq[String]("/", result.request.uri)
     | _HandshakeNeedMore => h.fail("expected result")
@@ -288,7 +288,7 @@ class \nodoc\ iso _TestHandshakeIncremental is UnitTest
       a
     end
 
-    match parser(consume first_half, 8192)
+    match \exhaustive\ parser(consume first_half, 8192)
     | _HandshakeNeedMore => None // expected
     | let _: _HandshakeResult => h.fail("too early")
     | let err: HandshakeError => h.fail("unexpected error")
@@ -304,7 +304,7 @@ class \nodoc\ iso _TestHandshakeIncremental is UnitTest
       a
     end
 
-    match parser(consume second_half, 8192)
+    match \exhaustive\ parser(consume second_half, 8192)
     | let result: _HandshakeResult =>
       h.assert_eq[String]("/", result.request.uri)
     | _HandshakeNeedMore => h.fail("expected result after second chunk")
@@ -323,7 +323,7 @@ class \nodoc\ iso _TestHandshakeRfc6455AcceptKey is UnitTest
   fun apply(h: TestHelper) =>
     let parser = _HandshakeParser
     let data = _TestHandshakeHelper.valid_request()
-    match parser(consume data, 8192)
+    match \exhaustive\ parser(consume data, 8192)
     | let result: _HandshakeResult =>
       h.assert_eq[String]("s3pPLMBiTxaQ9kYGzzhZRbK+xOo=", result.accept_key)
     | _HandshakeNeedMore => h.fail("expected result")
@@ -350,7 +350,7 @@ class \nodoc\ iso _TestHandshakeConnectionMultiToken is UnitTest
       s.clone().iso_array()
     end
     let parser = _HandshakeParser
-    match parser(consume request, 8192)
+    match \exhaustive\ parser(consume request, 8192)
     | let result: _HandshakeResult =>
       h.assert_eq[String]("/", result.request.uri)
     | _HandshakeNeedMore => h.fail("expected result")
@@ -368,7 +368,7 @@ class \nodoc\ iso _TestHandshakePropertyValidRequests is Property1[String]
     let test_uri: String val = "/" + uri_suffix
     let data = _TestHandshakeHelper.valid_request(where uri = test_uri)
     let parser = _HandshakeParser
-    match parser(consume data, 8192)
+    match \exhaustive\ parser(consume data, 8192)
     | let result: _HandshakeResult =>
       h.assert_eq[String](test_uri, result.request.uri)
     | _HandshakeNeedMore =>
@@ -391,7 +391,7 @@ class \nodoc\ iso _TestHandshakePropertyValidKeys is Property1[String]
     let key: String val = Base64.encode(raw_key)
     let data = _TestHandshakeHelper.valid_request(where key = key)
     let parser = _HandshakeParser
-    match parser(consume data, 8192)
+    match \exhaustive\ parser(consume data, 8192)
     | let result: _HandshakeResult => None // success expected
     | _HandshakeNeedMore =>
       h.fail("expected result for key: " + key)
@@ -416,7 +416,7 @@ class \nodoc\ iso _TestHandshakePropertyInvalidKeyLength is Property1[String]
     let key: String val = Base64.encode(raw_key)
     let data = _TestHandshakeHelper.valid_request(where key = key)
     let parser = _HandshakeParser
-    match parser(consume data, 8192)
+    match \exhaustive\ parser(consume data, 8192)
     | HandshakeInvalidKey => None // expected
     | _HandshakeNeedMore =>
       h.fail("expected HandshakeInvalidKey for key: " + key)

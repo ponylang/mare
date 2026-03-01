@@ -62,7 +62,7 @@ actor FilterHandler is ws.WebSocketServerActor
   fun ref _websocket(): ws.WebSocketServer => _ws
 
   fun ref on_upgrade_request(request: ws.UpgradeRequest val): Bool =>
-    let origin = match request.header("Origin")
+    let origin = match \exhaustive\ request.header("Origin")
     | let o: String val => o
     | None => ""
     end

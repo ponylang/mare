@@ -138,15 +138,15 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
 
   fun ref _feed_handshake(data: Array[U8] iso) =>
     """Process incoming data during the handshake phase."""
-    let max_size = match _config
+    let max_size = match \exhaustive\ _config
       | let c: WebSocketConfig val => c.max_handshake_size
       | None => _Unreachable(); return
       end
 
-    match _handshake_parser(consume data, max_size)
+    match \exhaustive\ _handshake_parser(consume data, max_size)
     | _HandshakeNeedMore => None
     | let result: _HandshakeResult =>
-      match _lifecycle_event_receiver
+      match \exhaustive\ _lifecycle_event_receiver
       | let r: WebSocketLifecycleEventReceiver ref =>
         if r.on_upgrade_request(result.request) then
           // Accept: send 101 response
@@ -184,7 +184,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
 
   fun ref _feed_frames_from_val(data: Array[U8] val) =>
     """Process incoming frame data from a val array."""
-    match _frame_parser.parse(data)
+    match \exhaustive\ _frame_parser.parse(data)
     | let frames: Array[_ParsedFrame val] val =>
       for frame in frames.values() do
         _dispatch_frame(frame)
@@ -203,7 +203,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
   fun ref _feed_frames_closing(data: Array[U8] iso) =>
     """Process incoming frame data in the Closing state."""
     let data_val: Array[U8] val = consume data
-    match _frame_parser.parse(data_val)
+    match \exhaustive\ _frame_parser.parse(data_val)
     | let frames: Array[_ParsedFrame val] val =>
       for frame in frames.values() do
         match frame.opcode
@@ -252,12 +252,12 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
       _state = _Closed
     else
       // Data frame (text, binary, continuation) — reassemble
-      let max_size = match _config
+      let max_size = match \exhaustive\ _config
         | let c: WebSocketConfig val => c.max_message_size
         | None => _Unreachable(); return
         end
 
-      match _reassembler.frame(
+      match \exhaustive\ _reassembler.frame(
         frame.fin, frame.opcode, frame.payload, max_size)
       | let msg: _CompleteMessage =>
         if msg.is_text then
@@ -314,19 +314,19 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     _tcp_connection.send(response)
 
   fun ref _fire_on_open(request: UpgradeRequest val) =>
-    match _lifecycle_event_receiver
+    match \exhaustive\ _lifecycle_event_receiver
     | let r: WebSocketLifecycleEventReceiver ref => r.on_open(request)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_text(data: String val) =>
-    match _lifecycle_event_receiver
+    match \exhaustive\ _lifecycle_event_receiver
     | let r: WebSocketLifecycleEventReceiver ref => r.on_text_message(data)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_binary(data: Array[U8] val) =>
-    match _lifecycle_event_receiver
+    match \exhaustive\ _lifecycle_event_receiver
     | let r: WebSocketLifecycleEventReceiver ref =>
       r.on_binary_message(data)
     | None => _Unreachable()
@@ -336,20 +336,20 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     close_status: CloseStatus,
     close_reason: String val)
   =>
-    match _lifecycle_event_receiver
+    match \exhaustive\ _lifecycle_event_receiver
     | let r: WebSocketLifecycleEventReceiver ref =>
       r.on_closed(close_status, close_reason)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_throttled() =>
-    match _lifecycle_event_receiver
+    match \exhaustive\ _lifecycle_event_receiver
     | let r: WebSocketLifecycleEventReceiver ref => r.on_throttled()
     | None => _Unreachable()
     end
 
   fun ref _fire_on_unthrottled() =>
-    match _lifecycle_event_receiver
+    match \exhaustive\ _lifecycle_event_receiver
     | let r: WebSocketLifecycleEventReceiver ref => r.on_unthrottled()
     | None => _Unreachable()
     end

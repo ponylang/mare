@@ -86,7 +86,7 @@ actor CloseHandler is ws.WebSocketServerActor
       else ""
       end
 
-    match close_status
+    match \exhaustive\ close_status
     | let c: ws.CloseCode =>
       _out.print("Closed with code: " + c.string() + reason_suffix)
     | let _: ws.CloseNoStatusReceived =>

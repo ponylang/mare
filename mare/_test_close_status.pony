@@ -170,7 +170,7 @@ class \nodoc\ _TestExtractorPropertyRoundtrip is Property1[U16]
     end
     (let status, _) = _CloseStatusExtractor.from_payload(payload)
     // Verify the extracted code matches the input regardless of type
-    let extracted_code = match status
+    let extracted_code = match \exhaustive\ status
       | let s: CloseNormal => s.code()
       | let s: CloseGoingAway => s.code()
       | let s: CloseProtocolError => s.code()

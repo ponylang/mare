@@ -8,7 +8,7 @@ class \nodoc\ iso _TestReassemblerSingleText is UnitTest
   fun apply(h: TestHelper) =>
     let reassembler = _FragmentReassembler
     let payload: Array[U8] val = "Hello".array()
-    match reassembler.frame(true, 0x01, payload, 1_048_576)
+    match \exhaustive\ reassembler.frame(true, 0x01, payload, 1_048_576)
     | let msg: _CompleteMessage =>
       h.assert_true(msg.is_text)
       h.assert_eq[USize](5, msg.data.size())
@@ -23,7 +23,7 @@ class \nodoc\ iso _TestReassemblerSingleBinary is UnitTest
   fun apply(h: TestHelper) =>
     let reassembler = _FragmentReassembler
     let payload: Array[U8] val = recover val [as U8: 0x01; 0x02] end
-    match reassembler.frame(true, 0x02, payload, 1_048_576)
+    match \exhaustive\ reassembler.frame(true, 0x02, payload, 1_048_576)
     | let msg: _CompleteMessage =>
       h.assert_false(msg.is_text)
       h.assert_eq[USize](2, msg.data.size())
@@ -40,7 +40,7 @@ class \nodoc\ iso _TestReassemblerMultiFragment is UnitTest
 
     // First fragment: text, FIN=0
     let frag1: Array[U8] val = "Hel".array()
-    match reassembler.frame(false, 0x01, frag1, 1_048_576)
+    match \exhaustive\ reassembler.frame(false, 0x01, frag1, 1_048_576)
     | _FragmentContinue => None // expected
     | let _: _CompleteMessage => h.fail("too early")
     | let err: _ReassemblyError => h.fail("unexpected error")
@@ -48,7 +48,7 @@ class \nodoc\ iso _TestReassemblerMultiFragment is UnitTest
 
     // Continuation: FIN=0
     let frag2: Array[U8] val = "lo ".array()
-    match reassembler.frame(false, 0x00, frag2, 1_048_576)
+    match \exhaustive\ reassembler.frame(false, 0x00, frag2, 1_048_576)
     | _FragmentContinue => None // expected
     | let _: _CompleteMessage => h.fail("too early")
     | let err: _ReassemblyError => h.fail("unexpected error")
@@ -56,7 +56,7 @@ class \nodoc\ iso _TestReassemblerMultiFragment is UnitTest
 
     // Final continuation: FIN=1
     let frag3: Array[U8] val = "World".array()
-    match reassembler.frame(true, 0x00, frag3, 1_048_576)
+    match \exhaustive\ reassembler.frame(true, 0x00, frag3, 1_048_576)
     | let msg: _CompleteMessage =>
       h.assert_true(msg.is_text)
       h.assert_eq[USize](11, msg.data.size())
@@ -83,7 +83,7 @@ class \nodoc\ iso _TestReassemblerInterleavedData is UnitTest
 
     // Attempt to start a new text message (interleaved)
     let frag2: Array[U8] val = "World".array()
-    match reassembler.frame(true, 0x01, frag2, 1_048_576)
+    match \exhaustive\ reassembler.frame(true, 0x01, frag2, 1_048_576)
     | let err: _ReassemblyError =>
       h.assert_is[CloseCode](CloseProtocolError, err.code)
     | _FragmentContinue => h.fail("expected error")
@@ -102,7 +102,7 @@ class \nodoc\ iso _TestReassemblerMaxSize is UnitTest
       while i < 100 do a.push(0x41); i = i + 1 end
       a
     end
-    match reassembler.frame(true, 0x02, payload, 50) // max=50
+    match \exhaustive\ reassembler.frame(true, 0x02, payload, 50) // max=50
     | let err: _ReassemblyError =>
       h.assert_is[CloseCode](CloseMessageTooBig, err.code)
     | _FragmentContinue => h.fail("expected error")
@@ -116,7 +116,7 @@ class \nodoc\ iso _TestReassemblerInvalidUtf8 is UnitTest
   fun apply(h: TestHelper) =>
     let reassembler = _FragmentReassembler
     let payload: Array[U8] val = recover val [as U8: 0xFF; 0xFE] end
-    match reassembler.frame(true, 0x01, payload, 1_048_576)
+    match \exhaustive\ reassembler.frame(true, 0x01, payload, 1_048_576)
     | let err: _ReassemblyError =>
       h.assert_is[CloseCode](CloseInvalidPayload, err.code)
     | _FragmentContinue => h.fail("expected error")
@@ -132,7 +132,7 @@ class \nodoc\ iso _TestReassemblerValidUtf8 is UnitTest
     // Valid UTF-8: "café" = 63 61 66 C3 A9
     let payload: Array[U8] val =
       recover val [as U8: 0x63; 0x61; 0x66; 0xC3; 0xA9] end
-    match reassembler.frame(true, 0x01, payload, 1_048_576)
+    match \exhaustive\ reassembler.frame(true, 0x01, payload, 1_048_576)
     | let msg: _CompleteMessage =>
       h.assert_true(msg.is_text)
       h.assert_eq[USize](5, msg.data.size())
@@ -147,7 +147,7 @@ class \nodoc\ iso _TestReassemblerContinuationWithoutStart is UnitTest
   fun apply(h: TestHelper) =>
     let reassembler = _FragmentReassembler
     let payload: Array[U8] val = "data".array()
-    match reassembler.frame(true, 0x00, payload, 1_048_576)
+    match \exhaustive\ reassembler.frame(true, 0x00, payload, 1_048_576)
     | let err: _ReassemblyError =>
       h.assert_is[CloseCode](CloseProtocolError, err.code)
     | _FragmentContinue => h.fail("expected error")
@@ -197,15 +197,15 @@ class \nodoc\ iso _TestReassemblerPropertyRoundtrip is Property1[USize]
     end
 
     let reassembler = _FragmentReassembler
-    match reassembler.frame(false, 0x02, frag1, total_size + 1)
+    match \exhaustive\ reassembler.frame(false, 0x02, frag1, total_size + 1)
     | _FragmentContinue => None
     else h.fail("expected continue for frag1")
     end
-    match reassembler.frame(false, 0x00, frag2, total_size + 1)
+    match \exhaustive\ reassembler.frame(false, 0x00, frag2, total_size + 1)
     | _FragmentContinue => None
     else h.fail("expected continue for frag2")
     end
-    match reassembler.frame(true, 0x00, frag3, total_size + 1)
+    match \exhaustive\ reassembler.frame(true, 0x00, frag3, total_size + 1)
     | let msg: _CompleteMessage =>
       h.assert_false(msg.is_text)
       h.assert_eq[USize](total_size, msg.data.size())

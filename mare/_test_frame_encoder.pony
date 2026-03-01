@@ -158,7 +158,7 @@ class \nodoc\ iso _TestFrameEncoderPropertyRoundtrip is Property1[USize]
 
     // Parse
     let parser = _FrameParser
-    match parser.parse(masked)
+    match \exhaustive\ parser.parse(masked)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       let parsed = frames(0)?
