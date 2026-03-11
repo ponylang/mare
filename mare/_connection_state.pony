@@ -83,7 +83,9 @@ primitive _Open is _ConnectionState
     server._fire_on_unthrottled()
 
   fun on_sent(server: WebSocketServer ref, token: lori.SendToken) => None
-  fun on_idle_timeout(server: WebSocketServer ref) => None
+
+  fun on_idle_timeout(server: WebSocketServer ref) =>
+    server._fire_on_idle_timeout()
 
   fun send_text(server: WebSocketServer ref, data: String val) =>
     server._send_frame(_FrameEncoder.text(data))

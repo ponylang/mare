@@ -65,3 +65,7 @@ trait WebSocketLifecycleEventReceiver
   fun ref on_unthrottled() =>
     """Called when backpressure is released on the connection."""
     None
+
+  fun ref on_idle_timeout() =>
+    """Called when the connection's idle timeout fires."""
+    None
