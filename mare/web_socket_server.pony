@@ -353,3 +353,9 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     | let r: WebSocketLifecycleEventReceiver ref => r.on_unthrottled()
     | None => _Unreachable()
     end
+
+  fun ref _fire_on_idle_timeout() =>
+    match \exhaustive\ _lifecycle_event_receiver
+    | let r: WebSocketLifecycleEventReceiver ref => r.on_idle_timeout()
+    | None => _Unreachable()
+    end
