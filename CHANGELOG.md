@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Forward on_idle_timeout to WebSocketLifecycleEventReceiver ([PR #26](https://github.com/ponylang/mare/pull/26))
 
 ### Changed
 
