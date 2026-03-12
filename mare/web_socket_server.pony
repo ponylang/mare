@@ -109,7 +109,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
   fun ref _on_closed() =>
     _state.on_closed(this)
 
-  fun ref _on_start_failure() =>
+  fun ref _on_start_failure(reason: lori.StartFailureReason) =>
     _state = _Closed
 
   fun ref _on_throttled() =>
@@ -128,7 +128,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
 
   fun ref _on_tls_ready() => None
 
-  fun ref _on_tls_failure() => None
+  fun ref _on_tls_failure(reason: lori.TLSFailureReason) => None
 
   // -- Internal methods called by state classes --
 
