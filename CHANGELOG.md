@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Update lori dependency to 0.10.0 ([PR #29](https://github.com/ponylang/mare/pull/29))
 
 ## [0.1.1] - 2026-03-11
 
