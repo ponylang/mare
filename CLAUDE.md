@@ -7,6 +7,7 @@ This project requires an SSL version flag because it depends on the `ssl` packag
 ```
 make test ssl=3.0.x          # Build + run tests + build examples
 make unit-tests ssl=3.0.x    # Just tests
+make test-one t=TestName ssl=3.0.x  # run a single test by name
 make examples ssl=3.0.x # Just examples
 ```
 
