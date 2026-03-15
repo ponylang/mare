@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix dispose() hanging when peer FIN is missed ([PR #32](https://github.com/ponylang/mare/pull/32))
 
 ### Added
 
