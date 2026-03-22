@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix idle timer issues with TLS-secured WebSocket connections ([PR #34](https://github.com/ponylang/mare/pull/34))
 
 ### Added
 
