@@ -13,8 +13,8 @@ make examples ssl=3.0.x # Just examples
 
 ## Dependencies
 
-- **lori** (0.10.0) — TCP networking. Provides `TCPListener`, `TCPConnection`, and the actor/lifecycle-receiver pattern.
-- **ssl** (2.0.0) — SHA-1 digest for computing the WebSocket handshake accept key (`ssl/crypto`). Also provides `ssl/net` for WSS (TLS) support.
+- **lori** (0.12.0) — TCP networking. Provides `TCPListener`, `TCPConnection`, and the actor/lifecycle-receiver pattern.
+- **ssl** (2.0.1) — SHA-1 digest for computing the WebSocket handshake accept key (`ssl/crypto`). Also provides `ssl/net` for WSS (TLS) support.
 - **stdlib encode/base64** — Base64 encoding/decoding for the handshake accept key.
 
 Import aliases used consistently across the codebase:

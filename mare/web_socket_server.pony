@@ -130,6 +130,8 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
 
   fun ref _on_tls_failure(reason: lori.TLSFailureReason) => None
 
+  fun ref _on_timer(token: lori.TimerToken) => None
+
   // -- Internal methods called by state classes --
 
   fun ref _set_state(state: _ConnectionState) =>
