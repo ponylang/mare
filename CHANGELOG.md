@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.2.3] - 2026-03-28
 
 ### Fixed
 
 - Fix crash when dispose() arrives before connection initialization ([PR #37](https://github.com/ponylang/mare/pull/37))
-
-### Added
-
-
-### Changed
-
 
 ## [0.2.2] - 2026-03-22
 
