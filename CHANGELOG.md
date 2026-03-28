@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix crash when dispose() arrives before connection initialization ([PR #37](https://github.com/ponylang/mare/pull/37))
 
 ### Added
 
