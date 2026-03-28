@@ -7,7 +7,7 @@
     "homepage": "https://github.com/ponylang/mare",
     "license": "BSD-2-Clause",
     "documentation_url": "https://ponylang.github.io/mare/",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "name": "mare"
   },
   "deps": [
