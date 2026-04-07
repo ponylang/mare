@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
-- Update lori to 0.13.1 ([PR #40](https://github.com/ponylang/mare/pull/40))
+- Fix connection stall after large message with backpressure ([PR #40](https://github.com/ponylang/mare/pull/40))
 
 ### Added
 
