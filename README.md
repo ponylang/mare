@@ -10,7 +10,7 @@ mare is beta quality software that will change frequently. Expect breaking chang
 
 * Requires ponyc 0.63.1 or later
 * Install [corral](https://github.com/ponylang/corral)
-* `corral add github.com/ponylang/mare.git --version 0.2.4`
+* `corral add github.com/ponylang/mare.git --version 0.3.0`
 * `corral fetch` to fetch your dependencies
 * `use "mare"` to include this package
 * `corral run -- ponyc` to compile your application
