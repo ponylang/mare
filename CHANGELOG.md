@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Require ponyc 0.64.0 or later ([PR #49](https://github.com/ponylang/mare/pull/49))
 
 ## [0.3.0] - 2026-04-12
 
