@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix server no longer receiving messages after a large send ([PR #52](https://github.com/ponylang/mare/pull/52))
 
 ### Added
 
