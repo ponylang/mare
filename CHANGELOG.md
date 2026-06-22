@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.4.1] - 2026-06-22
 
 ### Fixed
 
 - Fix server no longer receiving messages after a large send ([PR #52](https://github.com/ponylang/mare/pull/52))
-
-### Added
-
-
-### Changed
-
 
 ## [0.4.0] - 2026-05-28
 
