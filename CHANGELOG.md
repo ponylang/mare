@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Drop support for Windows 10 ([PR #53](https://github.com/ponylang/mare/pull/53))
 
 ## [0.4.1] - 2026-06-22
 
