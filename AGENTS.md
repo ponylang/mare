@@ -33,7 +33,7 @@ make test-one t=TestName ssl=3.0.x  # run a single test by name
 make examples ssl=3.0.x             # examples only
 ```
 
-`ssl=` is required because mare uses `ssl/crypto` for the SHA-1 that computes the WebSocket handshake accept key.
+`ssl=` is required because mare uses `ssl/crypto` for the SHA-1 that computes the WebSocket handshake accept key. Set it to your installed TLS library: `4.0.x`, `3.0.x`, `1.1.x`, or `libressl`.
 
 ## Connection states
 

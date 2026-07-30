@@ -8,14 +8,14 @@ mare is beta quality software that will change frequently. Expect breaking chang
 
 ## Installation
 
-* Requires ponyc 0.64.0 or later. On Windows, requires ponyc 0.66.0 or later.
+* Requires ponyc 0.67.0 or later.
 * Install [corral](https://github.com/ponylang/corral)
 * `corral add github.com/ponylang/mare.git --version 0.5.1`
 * `corral fetch` to fetch your dependencies
 * `use "mare"` to include this package
 * `corral run -- ponyc` to compile your application
 
-Mare has a transitive dependency on [ponylang/ssl](https://github.com/ponylang/ssl). It requires a C SSL library to be installed. Please see the [ssl installation instructions](https://github.com/ponylang/ssl?tab=readme-ov-file#installation) for more information.
+Mare depends on [ponylang/ssl](https://github.com/ponylang/ssl). It requires a C SSL library to be installed. Please see the [ssl installation instructions](https://github.com/ponylang/ssl?tab=readme-ov-file#installation) for more information.
 
 ## Usage
 

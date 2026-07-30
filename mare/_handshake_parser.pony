@@ -148,7 +148,12 @@ class _HandshakeParser
             return HandshakeInvalidKey
           end
         if decoded_size != 16 then return HandshakeInvalidKey end
-        let accept_key = _compute_accept_key(key)
+        let accept_key =
+          try
+            _compute_accept_key(key)?
+          else
+            return HandshakeAcceptKeyFailed
+          end
 
         // Extract remaining bytes after \r\n\r\n using String
         // intermediary: build ref String, clone to iso, iso_array to val
@@ -169,23 +174,17 @@ class _HandshakeParser
       HandshakeInvalidHTTP
     end
 
-  fun _compute_accept_key(key: String val): String val =>
+  fun _compute_accept_key(key: String val): String val ? =>
     """
     Compute the Sec-WebSocket-Accept value.
 
     Concatenates the client key with the WebSocket GUID, takes the SHA-1
-    hash, and Base64-encodes the result.
+    hash, and Base64-encodes the result. Raises when the hash cannot be
+    taken.
     """
     let magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-    let sha = crypto.Digest.sha1()
-    try
-      sha.>append(key)?.append(magic)?
-    else
-      _Unreachable()
-    end
-    let hash = sha.final()
-    let encoded: String val = Base64.encode(hash)
-    encoded
+    Base64.encode(
+      crypto.Digest.sha1()?.>append(key)?.>append(magic)?.final()?)
 
 class val _HandshakeResult
   """A successfully parsed WebSocket upgrade request."""
