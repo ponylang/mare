@@ -6,11 +6,20 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix dropped messages when a connection closes under backpressure ([PR #58](https://github.com/ponylang/mare/pull/58))
+- Fix a hang when closing a connection while handling a message ([PR #58](https://github.com/ponylang/mare/pull/58))
+- Fix a hang when sending under load ([PR #58](https://github.com/ponylang/mare/pull/58))
+
 
 ### Added
 
 
+
 ### Changed
+
+- Add HandshakeAcceptKeyFailed to HandshakeError ([PR #58](https://github.com/ponylang/mare/pull/58))
+- Require ponyc 0.67.0 or later ([PR #58](https://github.com/ponylang/mare/pull/58))
+- Move to ponylang/ssl 3.0.0 ([PR #58](https://github.com/ponylang/mare/pull/58))
 
 
 ## [0.5.1] - 2026-06-30

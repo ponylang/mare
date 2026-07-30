@@ -6,7 +6,8 @@ type HandshakeError is
   | HandshakeMissingUpgrade
   | HandshakeWrongVersion
   | HandshakeMissingKey
-  | HandshakeInvalidKey )
+  | HandshakeInvalidKey
+  | HandshakeAcceptKeyFailed )
 
 primitive HandshakeRequestTooLarge is Stringable
   """The HTTP upgrade request exceeded the maximum allowed size."""
@@ -55,3 +56,15 @@ primitive HandshakeInvalidKey is Stringable
   fun string(): String iso^ =>
     """Returns a human-readable description of this error."""
     "Invalid Sec-WebSocket-Key (must be base64-encoded 16 bytes)".clone()
+
+primitive HandshakeAcceptKeyFailed is Stringable
+  """
+  The Sec-WebSocket-Accept value could not be computed.
+
+  The request was well formed; the SHA-1 the accept value is built from
+  could not be taken. A server that reports this answers 500 rather than
+  400, because nothing about the client's request was wrong.
+  """
+  fun string(): String iso^ =>
+    """Returns a human-readable description of this error."""
+    "Could not compute Sec-WebSocket-Accept".clone()

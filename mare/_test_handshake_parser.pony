@@ -1,7 +1,6 @@
 use "pony_test"
 use "pony_check"
 use "encode/base64"
-use crypto = "ssl/crypto"
 
 primitive \nodoc\ _TestHandshakeHelper
   """Helpers for building HTTP upgrade requests."""
@@ -28,14 +27,6 @@ primitive \nodoc\ _TestHandshakeHelper
       .>append("\r\n")
     s.clone().iso_array()
 
-  fun compute_accept_key(key: String val): String val =>
-    """Compute expected Sec-WebSocket-Accept value."""
-    let magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-    let sha = crypto.Digest.sha1()
-    try sha.>append(key)?.append(magic)? else _Unreachable() end
-    let hash = sha.final()
-    Base64.encode(hash)
-
 class \nodoc\ iso _TestHandshakeValid is UnitTest
   """Valid complete upgrade request produces correct result."""
   fun name(): String => "handshake/valid_complete"
@@ -46,10 +37,8 @@ class \nodoc\ iso _TestHandshakeValid is UnitTest
     match \exhaustive\ parser(consume data, 8192)
     | let result: _HandshakeResult =>
       h.assert_eq[String]("/", result.request.uri)
-      let expected_key =
-        _TestHandshakeHelper.compute_accept_key(
-          "dGhlIHNhbXBsZSBub25jZQ==")
-      h.assert_eq[String](expected_key, result.accept_key)
+      h.assert_eq[String](
+        "s3pPLMBiTxaQ9kYGzzhZRbK+xOo=", result.accept_key)
       h.assert_eq[USize](0, result.remaining.size())
     | _HandshakeNeedMore =>
       h.fail("expected result, got need more")

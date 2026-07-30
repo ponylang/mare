@@ -103,8 +103,9 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
 
   fun ref _on_started() => None
 
-  fun ref _on_received(data: Array[U8] iso) =>
+  fun ref _on_received(data: Array[U8] iso): lori.ReadAction =>
     _state.on_received(this, consume data)
+    lori.KeepReading
 
   fun ref _on_closed() =>
     _state.on_closed(this)
@@ -172,6 +173,8 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
       | HandshakeWrongVersion =>
         _send_http_error("426 Upgrade Required",
           "Sec-WebSocket-Version: 13\r\n")
+      | HandshakeAcceptKeyFailed =>
+        _send_http_error("500 Internal Server Error")
       else
         _send_http_error("400 Bad Request")
       end
