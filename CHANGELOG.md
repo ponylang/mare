@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix a number of SSL bugs ([PR #61](https://github.com/ponylang/mare/pull/61))
 
 ### Added
 
