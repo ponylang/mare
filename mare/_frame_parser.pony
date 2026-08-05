@@ -2,10 +2,26 @@ class _FrameParser
   """
   Incremental WebSocket frame parser.
 
-  Accumulates incoming bytes and parses complete frames. Handles masking,
-  validates frame structure per RFC 6455, and returns unmasked payloads.
+  Accumulates incoming bytes and parses complete frames, validates frame
+  structure per RFC 6455, and returns unmasked payloads.
+
+  Masking is directional and mandatory in both directions: a server must
+  receive only masked frames and a client must receive only unmasked ones
+  (RFC 6455 Sections 5.1 and 5.2). `expect_masked` selects which. A frame
+  that disagrees is a protocol error rather than something to tolerate —
+  an unmasked frame arriving at a server is the proxy-smuggling case
+  masking exists to prevent.
   """
+  let _expect_masked: Bool
   var _buf: Array[U8] ref = Array[U8]
+
+  new create(expect_masked: Bool = true) =>
+    """
+    Create a parser for one direction.
+
+    Servers keep the default; clients pass `false`.
+    """
+    _expect_masked = expect_masked
 
   fun ref parse(data: Array[U8] val)
     : (Array[_ParsedFrame val] val | _FrameError)
@@ -57,8 +73,8 @@ class _FrameParser
         return _FrameError(CloseProtocolError)
       end
 
-      // Client frames must be masked
-      if not masked then
+      // Masking is required in one direction and forbidden in the other
+      if masked != _expect_masked then
         return _FrameError(CloseProtocolError)
       end
 
@@ -98,18 +114,21 @@ class _FrameParser
           _buf(9)?.usize()
       end
 
-      // Mask key (4 bytes, always present since masked is required)
-      let mask_offset = header_size
-      let total_header = header_size + 4
+      // Mask key (4 bytes, present only when the frame is masked)
+      let total_header = if masked then header_size + 4 else header_size end
       if _buf.size() < total_header then return None end
 
-      // Extract mask key bytes individually (U8 val is sendable)
-      let mk0 = _buf(mask_offset)?
-      let mk1 = _buf(mask_offset + 1)?
-      let mk2 = _buf(mask_offset + 2)?
-      let mk3 = _buf(mask_offset + 3)?
-      let mask_key: Array[U8] val =
-        recover val [as U8: mk0; mk1; mk2; mk3] end
+      // An unmasked frame unmasks against a zero key, which is the
+      // identity, so the payload loop below needs no second form.
+      let mask_key: U32 =
+        if masked then
+          (_buf(header_size)?.u32() << 24) or
+            (_buf(header_size + 1)?.u32() << 16) or
+            (_buf(header_size + 2)?.u32() << 8) or
+            _buf(header_size + 3)?.u32()
+        else
+          0
+        end
 
       // Check if we have the full payload
       let frame_size = total_header + payload_len
@@ -121,9 +140,8 @@ class _FrameParser
       let payload_s = String(payload_len)
       var i: USize = 0
       while i < payload_len do
-        let masked_byte = _buf(total_header + i)?
-        let mask_byte = mask_key(i % 4)?
-        payload_s.push(masked_byte xor mask_byte)
+        let shift = (24 - (8 * (i % 4))).u32()
+        payload_s.push(_buf(total_header + i)? xor (mask_key >> shift).u8())
         i = i + 1
       end
       let payload: Array[U8] val = payload_s.clone().iso_array()
