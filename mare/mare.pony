@@ -1,24 +1,37 @@
 """
 # Mare
 
-A WebSocket server for Pony built on
+WebSocket servers and clients for Pony, built on
 [lori](https://github.com/ponylang/lori).
 
 ## Architecture
 
-Mare follows lori's "your actor IS the connection" pattern:
+Mare follows lori's "your actor IS the connection" pattern. A protocol
+handler class lives inside your actor and handles the wire format; your
+actor receives application-level events.
+
+For a server:
 
 - A **listener actor** (`lori.TCPListenerActor`) accepts TCP connections.
   On each accept, it creates a new connection actor.
 - A **connection actor** (`WebSocketServerActor`) owns a `WebSocketServer`
   protocol handler and receives WebSocket lifecycle callbacks.
 
-The `WebSocketServer` class handles all protocol details — HTTP upgrade
-handshake, frame parsing, masking, fragmentation, and the close
-handshake — and delivers application-level events through the
-`WebSocketServerLifecycleEventReceiver` callbacks.
+For a client there is no listener — a single actor
+(`WebSocketClientActor`) owns a `WebSocketClient` and dials out.
 
-## Quick Start
+Both handlers cover the same protocol details — the HTTP upgrade
+handshake, frame parsing, masking, fragmentation, and the close
+handshake — and deliver application-level events through
+`WebSocketServerLifecycleEventReceiver` or
+`WebSocketClientLifecycleEventReceiver`.
+
+The two sides are not symmetric on the wire, and the API reflects that.
+A client masks every frame it sends and must receive only unmasked ones; a
+server is the reverse (RFC 6455 Sections 5.1 and 5.2). A client sends the
+upgrade request and validates the response; a server does the opposite.
+
+## Quick Start: Server
 
 A minimal echo server:
 
@@ -66,10 +79,55 @@ actor EchoHandler is WebSocketServerActor
     _ws.send_binary(data)
 ```
 
+## Quick Start: Client
+
+A client that sends one message and prints the reply:
+
+```pony
+use lori = "lori"
+use "mare"
+
+actor Main
+  new create(env: Env) =>
+    let auth = lori.TCPConnectAuth(env.root)
+    Client(auth, "localhost", "8080", WebSocketClientConfig, env.out)
+
+actor Client is WebSocketClientActor
+  var _ws: WebSocketClient = WebSocketClient.none()
+  let _out: OutStream
+
+  new create(auth: lori.TCPConnectAuth, host: String, port: String,
+    config: WebSocketClientConfig val, out: OutStream)
+  =>
+    _out = out
+    _ws = WebSocketClient(auth, host, port, "", this, config)
+
+  fun ref _websocket(): WebSocketClient => _ws
+
+  fun ref on_open(response: UpgradeResponse val) =>
+    _ws.send_text("hello")
+
+  fun ref on_text_message(data: String val) =>
+    _out.print("server said: " + data)
+    _ws.close()
+
+  fun ref on_connection_failure(reason: lori.ConnectionFailureReason) =>
+    _out.print("could not connect")
+
+  fun ref on_handshake_failure(err: ClientHandshakeError) =>
+    _out.print("upgrade refused: " + err.string())
+```
+
+The connection is not usable until `on_open()` fires. lori connects
+asynchronously and the upgrade handshake follows, so sends made before
+then are dropped rather than queued.
+
 ## WSS (Secure WebSocket)
 
-For TLS-encrypted connections, use `WebSocketServer.ssl()` instead of
-`create()` and pass an `ssl.net.SSLContext`:
+For TLS-encrypted connections, use `ssl()` instead of `create()` and pass
+an `ssl.net.SSLContext`.
+
+Server side:
 
 ```pony
 use ssl_net = "ssl/net"
@@ -90,14 +148,34 @@ actor SecureHandler is WebSocketServerActor
   fun ref _websocket(): WebSocketServer => _ws
 ```
 
+Client side:
+
+```pony
+_ws = WebSocketClient.ssl(
+  auth, ssl_ctx, host, port, "", this, config)
+```
+
 ## Configuration
 
-`WebSocketServerConfig` controls connection behavior:
+`WebSocketServerConfig` controls a server's behavior:
 
 - `host` / `port` — bind address (defaults: `"localhost"` / `"8080"`)
 - `max_message_size` — maximum reassembled message size in bytes
   (default: 1 MB)
 - `max_handshake_size` — maximum HTTP upgrade request size (default: 8 KB)
+
+`WebSocketClientConfig` controls a client's:
+
+- `path` — request target of the upgrade request (default: `"/"`)
+- `origin` — sets an `Origin` header when present
+- `subprotocols` — offered in `Sec-WebSocket-Protocol`; a server that
+  selects anything outside this list fails the handshake
+- `headers` — sent verbatim, which is where credentials belong
+- `max_message_size` / `max_handshake_size` — as above
+
+The target host and port are arguments to `WebSocketClient` rather than
+config fields: lori needs them to open the connection, and the `Host`
+header derives from them.
 
 ## Lifecycle Callbacks
 
@@ -114,9 +192,19 @@ Override any of these on your `WebSocketServerActor`:
   the UTF-8 reason string from the close frame (or empty)
 - `on_throttled()` / `on_unthrottled()` — backpressure signals
 
+On your `WebSocketClientActor` the same message, close, and backpressure
+callbacks apply, with these differences:
+
+- `on_open(response)` takes an `UpgradeResponse` instead of a request
+- there is no `on_upgrade_request()` — a client makes the request
+- `on_connection_failure(reason)` — the connection never opened, so no
+  `on_closed()` follows
+- `on_handshake_failure(err)` — TCP connected but the server's upgrade
+  response was unacceptable; see `ClientHandshakeError`
+
 ## Sending Messages
 
-Call methods on your `WebSocketServer` instance:
+Call methods on your `WebSocketServer` or `WebSocketClient` instance:
 
 - `send_text(data)` — send a text message
 - `send_binary(data)` — send a binary message

@@ -1,6 +1,6 @@
 # mare
 
-A WebSocket server for Pony, implementing [RFC 6455](https://www.rfc-editor.org/rfc/rfc6455).
+WebSocket servers and clients for Pony, implementing [RFC 6455](https://www.rfc-editor.org/rfc/rfc6455).
 
 ## Status
 
@@ -18,6 +18,8 @@ mare is beta quality software that will change frequently. Expect breaking chang
 Mare depends on [ponylang/ssl](https://github.com/ponylang/ssl). It requires a C SSL library to be installed. Please see the [ssl installation instructions](https://github.com/ponylang/ssl?tab=readme-ov-file#installation) for more information.
 
 ## Usage
+
+### Server
 
 Here's a complete echo server that sends back every message it receives:
 
@@ -90,6 +92,60 @@ actor EchoHandler is ws.WebSocketServerActor
   =>
     _out.print("Client disconnected: " + close_status.string())
 ```
+
+### Client
+
+And a client that connects to it, sends one message, and prints the reply:
+
+```pony
+use lori = "lori"
+use ws = "mare"
+
+actor Main
+  new create(env: Env) =>
+    let auth = lori.TCPConnectAuth(env.root)
+    Client(auth, "localhost", "8080", ws.WebSocketClientConfig, env.out)
+
+actor Client is ws.WebSocketClientActor
+  var _ws: ws.WebSocketClient = ws.WebSocketClient.none()
+  let _out: OutStream
+
+  new create(
+    auth: lori.TCPConnectAuth,
+    host: String,
+    port: String,
+    config: ws.WebSocketClientConfig val,
+    out: OutStream)
+  =>
+    _out = out
+    _ws = ws.WebSocketClient(auth, host, port, "", this, config)
+
+  fun ref _websocket(): ws.WebSocketClient => _ws
+
+  fun ref on_open(response: ws.UpgradeResponse val) =>
+    _out.print("Connected")
+    _ws.send_text("hello")
+
+  fun ref on_text_message(data: String val) =>
+    _out.print("Server said: " + data)
+    _ws.close()
+
+  fun ref on_connection_failure(reason: lori.ConnectionFailureReason) =>
+    _out.print("Could not connect")
+
+  fun ref on_handshake_failure(err: ws.ClientHandshakeError) =>
+    _out.print("Upgrade refused: " + err.string())
+
+  fun ref on_closed(
+    close_status: ws.CloseStatus,
+    close_reason: String val)
+  =>
+    _out.print("Disconnected: " + close_status.string())
+```
+
+The connection is not usable until `on_open()` fires — lori connects
+asynchronously and the upgrade handshake follows, so sends made before then
+are dropped rather than queued.
 
 More examples are in the [examples](examples/) directory.
 

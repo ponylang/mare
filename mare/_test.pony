@@ -58,6 +58,10 @@ actor \nodoc\ Main is TestList
     test(_TestFrameParserIncremental)
     test(_TestFrameParserMultipleFrames)
     test(Property1UnitTest[USize](_TestFrameParserPropertyRandom))
+    test(_TestFrameParserClientAcceptsUnmasked)
+    test(_TestFrameParserClientRejectsMasked)
+    test(_TestFrameParserClientExtendedLength)
+    test(Property1UnitTest[USize](_TestFrameParserClientPropertyRoundtrip))
 
     // Handshake parser
     test(_TestHandshakeValid)
@@ -77,6 +81,28 @@ actor \nodoc\ Main is TestList
     test(Property1UnitTest[String](_TestHandshakePropertyValidRequests))
     test(Property1UnitTest[String](_TestHandshakePropertyValidKeys))
     test(Property1UnitTest[String](_TestHandshakePropertyInvalidKeyLength))
+
+    // Client handshake
+    test(_TestClientHandshakeRequest)
+    test(_TestClientHandshakeRequestHostPort)
+    test(_TestClientHandshakeRequestOptional)
+    test(_TestClientHandshakeValid)
+    test(_TestClientHandshakeRemainingBytes)
+    test(_TestClientHandshakeIncremental)
+    test(_TestClientHandshakeAcceptMismatch)
+    test(_TestClientHandshakeMissingAccept)
+    test(_TestClientHandshakeMissingUpgrade)
+    test(_TestClientHandshakeUnexpectedStatus)
+    test(_TestClientHandshakeInvalidHTTP)
+    test(_TestClientHandshakeResponseTooLarge)
+    test(_TestClientHandshakeUnsolicitedExtension)
+    test(_TestClientHandshakeUnsolicitedSubprotocol)
+    test(_TestClientHandshakeOfferedSubprotocol)
+
+    // Key generation
+    test(_TestMaskKeyFresh)
+    test(_TestClientKeyShape)
+    test(_TestClientKeyFresh)
 
     // Close status extractor
     test(_TestExtractorEmptyPayload)
@@ -101,3 +127,6 @@ actor \nodoc\ Main is TestList
     test(_TestReassemblerValidUtf8)
     test(_TestReassemblerContinuationWithoutStart)
     test(Property1UnitTest[USize](_TestReassemblerPropertyRoundtrip))
+
+    // Integration — excluded from the unit test run, binds a socket
+    test(_TestIntegrationEcho)

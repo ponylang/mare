@@ -574,3 +574,108 @@ class \nodoc\ iso _TestFrameParserPropertyRandom is Property1[USize]
     | let err: _FrameError =>
       h.fail("unexpected error for size " + payload_size.string())
     end
+
+class \nodoc\ iso _TestFrameParserClientAcceptsUnmasked is UnitTest
+  """
+  A client-direction parser accepts an unmasked frame.
+
+  The mirror of `frame_parser/unmasked_rejected`: the same frame that is a
+  protocol error arriving at a server is the only legal form arriving at a
+  client.
+  """
+  fun name(): String => "frame_parser/client_accepts_unmasked"
+
+  fun apply(h: TestHelper) ? =>
+    let frame = _TestFrameHelper.unmasked_frame(
+      true, 0x01, "Hello".array())
+    let parser = _FrameParser(where expect_masked = false)
+    match \exhaustive\ parser.parse(frame)
+    | let frames: Array[_ParsedFrame val] val =>
+      h.assert_eq[USize](1, frames.size())
+      let parsed = frames(0)?
+      h.assert_true(parsed.fin)
+      h.assert_eq[U8](0x01, parsed.opcode)
+      h.assert_eq[String]("Hello", String.from_array(parsed.payload))
+    | let err: _FrameError =>
+      h.fail("client rejected an unmasked frame")
+    end
+
+class \nodoc\ iso _TestFrameParserClientRejectsMasked is UnitTest
+  """
+  A client-direction parser rejects a masked frame.
+
+  RFC 6455 Section 5.1 forbids the server from masking. Tolerating it would
+  mean accepting frames from something that is not behaving as a server.
+  """
+  fun name(): String => "frame_parser/client_rejects_masked"
+
+  fun apply(h: TestHelper) =>
+    let frame = _TestFrameHelper.masked_frame(
+      true, 0x01, "Hello".array())
+    let parser = _FrameParser(where expect_masked = false)
+    match \exhaustive\ parser.parse(frame)
+    | let frames: Array[_ParsedFrame val] val =>
+      h.fail("client accepted a masked frame")
+    | let err: _FrameError =>
+      h.assert_is[CloseCode](CloseProtocolError, err.code)
+    end
+
+class \nodoc\ iso _TestFrameParserClientExtendedLength is UnitTest
+  """
+  A client-direction parser reads 16-bit extended lengths correctly.
+
+  An unmasked header is four bytes shorter than a masked one, so this is
+  the case that catches a payload offset still accounting for a mask key.
+  """
+  fun name(): String => "frame_parser/client_extended_length"
+
+  fun apply(h: TestHelper) ? =>
+    let payload: Array[U8] val = recover val
+      let a = Array[U8](300)
+      var i: USize = 0
+      while i < 300 do a.push((i % 251).u8()); i = i + 1 end
+      a
+    end
+    let frame = _TestFrameHelper.unmasked_frame(true, 0x02, payload)
+    let parser = _FrameParser(where expect_masked = false)
+    match \exhaustive\ parser.parse(frame)
+    | let frames: Array[_ParsedFrame val] val =>
+      let parsed = frames(0)?
+      h.assert_eq[USize](300, parsed.payload.size())
+      var j: USize = 0
+      while j < 300 do
+        h.assert_eq[U8](payload(j)?, parsed.payload(j)?)
+        j = j + 1
+      end
+    | let err: _FrameError =>
+      h.fail("client rejected an unmasked extended-length frame")
+    end
+
+class \nodoc\ iso _TestFrameParserClientPropertyRoundtrip is Property1[USize]
+  """Unmasked frames of any payload size parse back to the original bytes."""
+  fun name(): String => "frame_parser/client_property_roundtrip"
+
+  fun gen(): Generator[USize] =>
+    Generators.usize(where min = 0, max = 300)
+
+  fun property(payload_size: USize, h: PropertyHelper) ? =>
+    let payload: Array[U8] val = recover val
+      let a = Array[U8](payload_size)
+      var i: USize = 0
+      while i < payload_size do a.push((i % 251).u8()); i = i + 1 end
+      a
+    end
+    let frame = _TestFrameHelper.unmasked_frame(true, 0x02, payload)
+    let parser = _FrameParser(where expect_masked = false)
+    match \exhaustive\ parser.parse(frame)
+    | let frames: Array[_ParsedFrame val] val =>
+      h.assert_eq[USize](1, frames.size())
+      h.assert_eq[USize](payload_size, frames(0)?.payload.size())
+      var j: USize = 0
+      while j < payload_size do
+        h.assert_eq[U8](payload(j)?, frames(0)?.payload(j)?)
+        j = j + 1
+      end
+    | let err: _FrameError =>
+      h.fail("unexpected error for size " + payload_size.string())
+    end
