@@ -1,7 +1,8 @@
 use lori = "lori"
 use ssl_net = "ssl/net"
 
-class WebSocketServer is lori.ServerLifecycleEventReceiver
+class WebSocketServer is
+  (lori.ServerLifecycleEventReceiver & _WebSocketNode)
   """
   WebSocket protocol handler that manages handshaking, framing, and
   connection lifecycle for a single WebSocket connection.
