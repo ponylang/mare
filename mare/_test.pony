@@ -28,7 +28,11 @@ actor \nodoc\ Main is TestList
     test(_TestFrameEncoderPong)
     test(_TestFrameEncoderLength16Bit)
     test(_TestFrameEncoderLength64Bit)
+    test(_TestFrameEncoderMaskedRfc6455)
+    test(_TestFrameEncoderMaskedLength16Bit)
+    test(_TestFrameEncoderMaskedClose)
     test(Property1UnitTest[USize](_TestFrameEncoderPropertyRoundtrip))
+    test(Property1UnitTest[U32](_TestFrameEncoderPropertyMaskKeys))
 
     // Frame parser
     test(_TestFrameParserText)

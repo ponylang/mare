@@ -130,35 +130,103 @@ class \nodoc\ iso _TestFrameEncoderLength64Bit is UnitTest
     // Total frame size: 2 + 8 (extended length) + 65536 = 65546
     h.assert_eq[USize](65546, frame.size())
 
+class \nodoc\ iso _TestFrameEncoderMaskedRfc6455 is UnitTest
+  """
+  A masked text frame matches the worked example in RFC 6455 Section 5.7.
+  """
+  fun name(): String => "frame_encoder/masked_rfc6455"
+
+  fun apply(h: TestHelper) ? =>
+    let frame = _FrameEncoder.text("Hello", 0x37FA213D)
+    h.assert_eq[USize](11, frame.size())
+    // FIN=1, opcode=0x1
+    h.assert_eq[U8](0x81, frame(0)?)
+    // MASK=1, length=5
+    h.assert_eq[U8](0x85, frame(1)?)
+    // Mask key, big-endian
+    h.assert_eq[U8](0x37, frame(2)?)
+    h.assert_eq[U8](0xFA, frame(3)?)
+    h.assert_eq[U8](0x21, frame(4)?)
+    h.assert_eq[U8](0x3D, frame(5)?)
+    // "Hello" XORed with the key
+    h.assert_eq[U8](0x7F, frame(6)?)
+    h.assert_eq[U8](0x9F, frame(7)?)
+    h.assert_eq[U8](0x4D, frame(8)?)
+    h.assert_eq[U8](0x51, frame(9)?)
+    h.assert_eq[U8](0x58, frame(10)?)
+
+class \nodoc\ iso _TestFrameEncoderMaskedLength16Bit is UnitTest
+  """A masked frame places the key after the extended length, not before."""
+  fun name(): String => "frame_encoder/masked_length_16bit"
+
+  fun apply(h: TestHelper) ? =>
+    let payload: Array[U8] val = recover val
+      let a = Array[U8](200)
+      var i: USize = 0
+      while i < 200 do
+        a.push(0x41)
+        i = i + 1
+      end
+      a
+    end
+    let frame = _FrameEncoder.binary(payload, 0x01020304)
+    h.assert_eq[U8](0x82, frame(0)?)
+    // MASK=1 combined with the 126 length indicator
+    h.assert_eq[U8](0xFE, frame(1)?)
+    // 16-bit big-endian length: 200 = 0x00C8
+    h.assert_eq[U8](0x00, frame(2)?)
+    h.assert_eq[U8](0xC8, frame(3)?)
+    // Mask key follows the extended length
+    h.assert_eq[U8](0x01, frame(4)?)
+    h.assert_eq[U8](0x02, frame(5)?)
+    h.assert_eq[U8](0x03, frame(6)?)
+    h.assert_eq[U8](0x04, frame(7)?)
+    // First payload byte: 0x41 xor 0x01
+    h.assert_eq[U8](0x40, frame(8)?)
+    // Total: 2 header + 2 length + 4 key + 200 payload
+    h.assert_eq[USize](208, frame.size())
+
+class \nodoc\ iso _TestFrameEncoderMaskedClose is UnitTest
+  """A masked close frame masks the status code, which is payload."""
+  fun name(): String => "frame_encoder/masked_close"
+
+  fun apply(h: TestHelper) ? =>
+    let frame = _FrameEncoder.close(CloseNormal where mask_key = 0xFFFFFFFF)
+    // FIN=1, opcode=0x8
+    h.assert_eq[U8](0x88, frame(0)?)
+    // MASK=1, length=2
+    h.assert_eq[U8](0x82, frame(1)?)
+    // Status 1000 = 0x03E8, each byte XORed with 0xFF
+    h.assert_eq[U8](0xFC, frame(6)?)
+    h.assert_eq[U8](0x17, frame(7)?)
+    h.assert_eq[USize](8, frame.size())
+
 class \nodoc\ iso _TestFrameEncoderPropertyRoundtrip is Property1[USize]
-  """Encoded frames can be parsed back through the frame parser."""
+  """
+  Masked frames of any payload size parse back to the original bytes.
+
+  `_FrameParser` reads the server direction, which requires masked input,
+  so encoding as a client would is exactly what it accepts.
+  """
   fun name(): String => "frame_encoder/property_roundtrip"
 
   fun gen(): Generator[USize] =>
     Generators.usize(where min = 0, max = 300)
 
   fun property(payload_size: USize, h: PropertyHelper) ? =>
-    // Build a payload of the given size
+    // Vary the payload bytes so a masking error cannot cancel itself out
     let payload_s = String(payload_size)
     var i: USize = 0
     while i < payload_size do
-      payload_s.push('A')
+      payload_s.push('A' + (i % 26).u8())
       i = i + 1
     end
     let payload: Array[U8] val = payload_s.clone().iso_array()
 
-    // Encode as binary frame (server-to-client, unmasked)
-    let frame = _FrameEncoder.binary(payload)
+    let frame = _FrameEncoder.binary(payload, 0x37FA213D)
 
-    // To parse through _FrameParser, we need to mask the frame
-    // (client-to-server). Build a masked version.
-    let mask_key: Array[U8] val =
-      recover val [as U8: 0x37; 0xFA; 0x21; 0x3D] end
-    let masked = _mask_frame(frame, mask_key)?
-
-    // Parse
     let parser = _FrameParser
-    match \exhaustive\ parser.parse(masked)
+    match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
       h.assert_eq[USize](1, frames.size())
       let parsed = frames(0)?
@@ -175,53 +243,40 @@ class \nodoc\ iso _TestFrameEncoderPropertyRoundtrip is Property1[USize]
       h.fail("Frame parser returned error")
     end
 
-  fun _mask_frame(
-    frame: Array[U8] val,
-    mask_key: Array[U8] val)
-    : Array[U8] val ?
-  =>
-    """
-    Convert an unmasked server frame to a masked client frame for
-    testing. Sets the MASK bit and inserts the mask key, then XORs
-    the payload.
-    """
-    // Read the original header
-    let b0 = frame(0)?
-    let b1 = frame(1)?
-    let orig_len_byte = b1 and 0x7F
+class \nodoc\ iso _TestFrameEncoderPropertyMaskKeys is Property1[U32]
+  """
+  Any mask key round-trips. Catches byte-order and shift errors that a
+  single fixed key can hide.
+  """
+  fun name(): String => "frame_encoder/property_mask_keys"
 
-    // Determine header size and payload offset
-    var header_size: USize = 2
-    if orig_len_byte == 126 then header_size = 4
-    elseif orig_len_byte == 127 then header_size = 10
-    end
-    let payload_offset = header_size
-    let payload_size = frame.size() - payload_offset
+  fun gen(): Generator[U32] =>
+    Generators.u32()
 
-    // Build masked frame
-    let result = recover iso
-      let r = Array[U8](header_size + 4 + payload_size)
-      // Copy first byte unchanged
-      r.push(b0)
-      // Set MASK bit on second byte
-      r.push(b1 or 0x80)
-      // Copy extended length bytes if any
-      var i: USize = 2
-      while i < header_size do
-        r.push(frame(i)?)
+  fun property(mask_key: U32, h: PropertyHelper) ? =>
+    let payload: Array[U8] val = recover val
+      let a = Array[U8](64)
+      var i: USize = 0
+      while i < 64 do
+        a.push(i.u8())
         i = i + 1
       end
-      // Insert mask key
-      r.push(mask_key(0)?)
-      r.push(mask_key(1)?)
-      r.push(mask_key(2)?)
-      r.push(mask_key(3)?)
-      // Mask payload
+      a
+    end
+
+    let frame = _FrameEncoder.binary(payload, mask_key)
+
+    let parser = _FrameParser
+    match \exhaustive\ parser.parse(frame)
+    | let frames: Array[_ParsedFrame val] val =>
+      h.assert_eq[USize](1, frames.size())
+      let parsed = frames(0)?
+      h.assert_eq[USize](64, parsed.payload.size())
       var j: USize = 0
-      while j < payload_size do
-        r.push(frame(payload_offset + j)? xor mask_key(j % 4)?)
+      while j < 64 do
+        h.assert_eq[U8](payload(j)?, parsed.payload(j)?)
         j = j + 1
       end
-      r
+    | let err: _FrameError =>
+      h.fail("Frame parser returned error")
     end
-    consume result
