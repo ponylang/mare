@@ -18,10 +18,14 @@ class WebSocketClient is
   actor MyHandler is WebSocketClientActor
     var _ws: WebSocketClient = WebSocketClient.none()
 
-    new create(auth: lori.TCPConnectAuth, fd: U32,
-      config: WebSocketConfig val)
+    new create(
+      auth: lori.TCPConnectAuth,
+      host: String,
+      port: String,
+      from: String,
+      config: WebSocketConfig)
     =>
-      _ws = WebSocketClient(auth, fd, this, config)
+      _ws = WebSocketClient(auth, host, port, from, this, config)
 
     fun ref _websocket(): WebSocketClient => _ws
   ```
