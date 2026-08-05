@@ -208,7 +208,7 @@ class WebSocketClient is
         end
       end
     | let err: _FrameError =>
-      _send_frame(_FrameEncoder.close(err.code))
+      _send_close_frame(err.code)
       _fire_on_closed(err.code, "")
       _tcp_connection.close()
       _state = _Closed
@@ -231,7 +231,7 @@ class WebSocketClient is
           return
         | 0x09 =>
           // Ping — still respond with pong during close
-          _send_frame(_FrameEncoder.pong(frame.payload))
+          _send_pong(frame.payload)
         | 0x0A => None // Pong — discard
         else
           None // Data frames — discard during closing
@@ -248,16 +248,16 @@ class WebSocketClient is
     match frame.opcode
     | 0x09 =>
       // Ping — auto-respond with pong
-      _send_frame(_FrameEncoder.pong(frame.payload))
+      _send_pong(frame.payload)
     | 0x0A =>
       // Pong — discard
       None
     | 0x08 =>
       // Close — echo the client's close payload (status code + reason)
       if frame.payload.size() >= 2 then
-        _send_frame(_FrameEncoder.close_payload(frame.payload))
+        _send_close_payload(frame.payload)
       else
-        _send_frame(_FrameEncoder.close_empty())
+        _send_close_empty()
       end
       (let status, let reason) =
         _CloseStatusExtractor.from_payload(frame.payload)
@@ -281,7 +281,7 @@ class WebSocketClient is
         end
       | _FragmentContinue => None
       | let err: _ReassemblyError =>
-        _send_frame(_FrameEncoder.close(err.code))
+        _send_close_frame(err.code)
         _fire_on_closed(err.code, "")
         _tcp_connection.close()
         _state = _Closed
@@ -299,14 +299,59 @@ class WebSocketClient is
     """
     _tcp_connection.send(data)
 
+  // -- Masked frame encoding --
+
   fun ref _send_text(data: String val) =>
-    _send_frame(_FrameEncoder.text(data))
+    """Encode and send a masked text message."""
+    match _MaskKey()
+    | let key: U32 => _send_frame(_FrameEncoder.text(data, key))
+    | _MaskKeyUnavailable => None
+    end
 
   fun ref _send_binary(data: Array[U8] val) =>
-    _send_frame(_FrameEncoder.binary(data))
+    """Encode and send a masked binary message."""
+    match _MaskKey()
+    | let key: U32 => _send_frame(_FrameEncoder.binary(data, key))
+    | _MaskKeyUnavailable => None
+    end
+
+  fun ref _send_close_frame(code: CloseCode, reason: String val = "") =>
+    """
+    Encode and send a masked close frame, without changing state.
+
+    The error paths transition straight to `_Closed`, so the transition is
+    the caller's business rather than this method's.
+    """
+    match _MaskKey()
+    | let key: U32 => _send_frame(_FrameEncoder.close(code, reason, key))
+    | _MaskKeyUnavailable => None
+    end
+
+  fun ref _send_close_payload(payload: Array[U8] val) =>
+    """Encode and send a masked close frame echoing the server's payload."""
+    match _MaskKey()
+    | let key: U32 =>
+      _send_frame(_FrameEncoder.close_payload(payload, key))
+    | _MaskKeyUnavailable => None
+    end
+
+  fun ref _send_close_empty() =>
+    """Encode and send a masked close frame with no payload."""
+    match _MaskKey()
+    | let key: U32 => _send_frame(_FrameEncoder.close_empty(key))
+    | _MaskKeyUnavailable => None
+    end
+
+  fun ref _send_pong(payload: Array[U8] val) =>
+    """Encode and send a masked pong echoing a ping payload."""
+    match _MaskKey()
+    | let key: U32 => _send_frame(_FrameEncoder.pong(payload, key))
+    | _MaskKeyUnavailable => None
+    end
 
   fun ref _close(code: CloseCode, reason: String val) =>
-    _send_frame(_FrameEncoder.close(code, reason))
+    """Send a close frame and await the server's response."""
+    _send_close_frame(code, reason)
     _set_state(_Closing)
 
   fun ref _send_101_response(accept_key: String val) =>
