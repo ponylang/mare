@@ -1,152 +1,194 @@
 use lori = "lori"
 
-type Node is (WebSocketServer | WebSocketClient)
+trait ref _WebSocketNode
+  """
+  The protocol handler surface that connection states drive.
 
-trait val _ConnectionState[A: Node ref]
+  Both `WebSocketServer` and `WebSocketClient` implement this trait, which
+  is what lets them share one set of state primitives. The states only ever
+  reach a handler through this trait, so each side is free to give these
+  methods a direction-appropriate meaning: `_feed_handshake` parses an
+  upgrade request on the server and an upgrade response on the client.
+  """
+
+  fun ref _set_state(state: _ConnectionState)
+    """Transition to a new connection state."""
+
+  fun ref _feed_handshake(data: Array[U8] iso)
+    """Process incoming data during the handshake phase."""
+
+  fun ref _feed_frames(data: Array[U8] iso)
+    """Process incoming frame data in the Open state."""
+
+  fun ref _feed_frames_closing(data: Array[U8] iso)
+    """Process incoming frame data in the Closing state."""
+
+  fun ref _send_frame(data: Array[U8] val)
+    """Send an encoded frame over TCP."""
+
+  fun ref _fire_on_closed(
+    close_status: CloseStatus,
+    close_reason: String val)
+    """Deliver the close event to the lifecycle event receiver."""
+
+  fun ref _fire_on_throttled()
+    """Deliver the backpressure applied event."""
+
+  fun ref _fire_on_unthrottled()
+    """Deliver the backpressure released event."""
+
+  fun ref _fire_on_idle_timeout()
+    """Deliver the idle timeout event."""
+
+trait val _ConnectionState
   """
   Connection lifecycle state.
 
-  Dispatches WebSocket events to the appropriate methods based on
+  Dispatches WebSocket events to the appropriate handler methods based on
   what operations are valid in each state. Four states:
-  `_Handshaking` (parsing HTTP upgrade), `_Open` (exchanging messages),
-  `_Closing` (initiated close, awaiting response from the other side), and
-  `_Closed` (all operations are no-ops).
+  `_Handshaking` (exchanging the HTTP upgrade), `_Open` (exchanging
+  messages), `_Closing` (this side initiated a close and is awaiting the
+  peer's response), and `_Closed` (all operations are no-ops).
+
+  States are shared between the server and the client. They take a
+  `_WebSocketNode` rather than a concrete handler, so one set of primitives
+  serves both directions.
   """
 
-  fun on_received(node: A, data: Array[U8] iso)
+  fun on_received(node: _WebSocketNode ref, data: Array[U8] iso)
     """Handle incoming data from the TCP connection."""
 
-  fun on_closed(node: A)
+  fun on_closed(node: _WebSocketNode ref)
     """Handle connection close notification."""
 
-  fun on_throttled(node: A)
+  fun on_throttled(node: _WebSocketNode ref)
     """Handle backpressure applied notification."""
 
-  fun on_unthrottled(node: A)
+  fun on_unthrottled(node: _WebSocketNode ref)
     """Handle backpressure released notification."""
 
-  fun on_sent(node: A, token: lori.SendToken)
+  fun on_sent(node: _WebSocketNode ref, token: lori.SendToken)
     """Handle send completion notification from lori."""
 
-  fun on_idle_timeout(node: A)
+  fun on_idle_timeout(node: _WebSocketNode ref)
     """Handle connection going idle."""
 
-  fun send_text(node: A, data: String val)
+  fun send_text(node: _WebSocketNode ref, data: String val)
     """Send a text message."""
 
-  fun send_binary(node: A, data: Array[U8] val)
+  fun send_binary(node: _WebSocketNode ref, data: Array[U8] val)
     """Send a binary message."""
 
   fun close(
-    node: A,
+    node: _WebSocketNode ref,
     code: CloseCode,
     reason: String val)
     """Initiate a close handshake."""
 
-primitive _Handshaking[A: Node ref] is _ConnectionState[A]
-  """Parsing the HTTP upgrade request. No WebSocket messages yet."""
+primitive _Handshaking is _ConnectionState
+  """Exchanging the HTTP upgrade. No WebSocket messages yet."""
 
-  fun on_received(node: A, data: Array[U8] iso) =>
+  fun on_received(node: _WebSocketNode ref, data: Array[U8] iso) =>
     node._feed_handshake(consume data)
 
-  fun on_closed(node: A) =>
+  fun on_closed(node: _WebSocketNode ref) =>
     // Handshake never completed — no user callbacks
-    node._set_state(_Closed[A])
+    node._set_state(_Closed)
 
-  fun on_throttled(node: A) => None
-  fun on_unthrottled(node: A) => None
-  fun on_sent(node: A, token: lori.SendToken) => None
-  fun on_idle_timeout(node: A) => None
-  fun send_text(node: A, data: String val) => None
-  fun send_binary(node: A, data: Array[U8] val) => None
+  fun on_throttled(node: _WebSocketNode ref) => None
+  fun on_unthrottled(node: _WebSocketNode ref) => None
+  fun on_sent(node: _WebSocketNode ref, token: lori.SendToken) => None
+  fun on_idle_timeout(node: _WebSocketNode ref) => None
+  fun send_text(node: _WebSocketNode ref, data: String val) => None
+  fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) => None
 
   fun close(
-    node: A,
+    node: _WebSocketNode ref,
     code: CloseCode,
     reason: String val)
   =>
     None
 
-primitive _Open[A: Node ref] is _ConnectionState[A]
+primitive _Open is _ConnectionState
   """WebSocket connection is open — exchanging messages."""
 
-  fun on_received(node: A, data: Array[U8] iso) =>
+  fun on_received(node: _WebSocketNode ref, data: Array[U8] iso) =>
     node._feed_frames(consume data)
 
-  fun on_closed(node: A) =>
+  fun on_closed(node: _WebSocketNode ref) =>
     // Abnormal TCP close
     node._fire_on_closed(CloseAbnormalClosure, "")
-    node._set_state(_Closed[A])
+    node._set_state(_Closed)
 
-  fun on_throttled(node: A) =>
+  fun on_throttled(node: _WebSocketNode ref) =>
     node._fire_on_throttled()
 
-  fun on_unthrottled(node: A) =>
+  fun on_unthrottled(node: _WebSocketNode ref) =>
     node._fire_on_unthrottled()
 
-  fun on_sent(node: A, token: lori.SendToken) => None
+  fun on_sent(node: _WebSocketNode ref, token: lori.SendToken) => None
 
-  fun on_idle_timeout(node: WebSocketServer ref) =>
+  fun on_idle_timeout(node: _WebSocketNode ref) =>
     node._fire_on_idle_timeout()
 
-  fun send_text(node: A, data: String val) =>
+  fun send_text(node: _WebSocketNode ref, data: String val) =>
     node._send_frame(_FrameEncoder.text(data))
 
-  fun send_binary(node: A, data: Array[U8] val) =>
+  fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) =>
     node._send_frame(_FrameEncoder.binary(data))
 
   fun close(
-    node: A,
+    node: _WebSocketNode ref,
     code: CloseCode,
     reason: String val)
   =>
     node._send_frame(_FrameEncoder.close(code, reason))
-    node._set_state(_Closing[A])
+    node._set_state(_Closing)
 
-primitive _Closing[A: Node ref] is _ConnectionState[A]
+primitive _Closing is _ConnectionState
   """
-  Server initiated close, waiting for client's close response.
+  This side initiated a close, waiting for the peer's close response.
 
   Data frames are discarded. Control frames are still processed:
   ping gets a pong, pong is ignored, close completes the handshake.
   """
 
-  fun on_received(node: A, data: Array[U8] iso) =>
+  fun on_received(node: _WebSocketNode ref, data: Array[U8] iso) =>
     node._feed_frames_closing(consume data)
 
-  fun on_closed(node: A) =>
+  fun on_closed(node: _WebSocketNode ref) =>
     // TCP dropped before close response
     node._fire_on_closed(CloseAbnormalClosure, "")
-    node._set_state(_Closed[A])
+    node._set_state(_Closed)
 
-  fun on_throttled(node: A) => None
-  fun on_unthrottled(node: A) => None
-  fun on_sent(node: A, token: lori.SendToken) => None
-  fun on_idle_timeout(node: A) => None
-  fun send_text(node: A, data: String val) => None
-  fun send_binary(node: A, data: Array[U8] val) => None
+  fun on_throttled(node: _WebSocketNode ref) => None
+  fun on_unthrottled(node: _WebSocketNode ref) => None
+  fun on_sent(node: _WebSocketNode ref, token: lori.SendToken) => None
+  fun on_idle_timeout(node: _WebSocketNode ref) => None
+  fun send_text(node: _WebSocketNode ref, data: String val) => None
+  fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) => None
 
   fun close(
-    node: A,
+    node: _WebSocketNode ref,
     code: CloseCode,
     reason: String val)
   =>
     None
 
-primitive _Closed[A: Node ref] is _ConnectionState[A]
+primitive _Closed is _ConnectionState
   """Connection is closed — all operations are no-ops."""
 
-  fun on_received(node: A, data: Array[U8] iso) => None
-  fun on_closed(node: A) => None
-  fun on_throttled(node: A) => None
-  fun on_unthrottled(node: A) => None
-  fun on_sent(node: A, token: lori.SendToken) => None
-  fun on_idle_timeout(node: A) => None
-  fun send_text(node: A, data: String val) => None
-  fun send_binary(node: A, data: Array[U8] val) => None
+  fun on_received(node: _WebSocketNode ref, data: Array[U8] iso) => None
+  fun on_closed(node: _WebSocketNode ref) => None
+  fun on_throttled(node: _WebSocketNode ref) => None
+  fun on_unthrottled(node: _WebSocketNode ref) => None
+  fun on_sent(node: _WebSocketNode ref, token: lori.SendToken) => None
+  fun on_idle_timeout(node: _WebSocketNode ref) => None
+  fun send_text(node: _WebSocketNode ref, data: String val) => None
+  fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) => None
 
   fun close(
-    node: A,
+    node: _WebSocketNode ref,
     code: CloseCode,
     reason: String val)
   =>
