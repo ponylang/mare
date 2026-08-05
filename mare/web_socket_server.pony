@@ -291,6 +291,16 @@ class WebSocketServer is
     """
     _tcp_connection.send(data)
 
+  fun ref _send_text(data: String val) =>
+    _send_frame(_FrameEncoder.text(data))
+
+  fun ref _send_binary(data: Array[U8] val) =>
+    _send_frame(_FrameEncoder.binary(data))
+
+  fun ref _close(code: CloseCode, reason: String val) =>
+    _send_frame(_FrameEncoder.close(code, reason))
+    _set_state(_Closing)
+
   fun ref _send_101_response(accept_key: String val) =>
     """Send the HTTP 101 Switching Protocols response."""
     let response: String val = recover val

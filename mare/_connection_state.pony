@@ -26,6 +26,15 @@ trait ref _WebSocketNode
   fun ref _send_frame(data: Array[U8] val)
     """Send an encoded frame over TCP."""
 
+  fun ref _send_text(data: String val) =>
+    """Send a text message."""
+
+  fun ref _send_binary(data: Array[U8] val) =>
+    """Send a binary message."""
+
+  fun ref _close(code: CloseCode, reason: String val) =>
+    """Send a binary message."""
+
   fun ref _fire_on_closed(
     close_status: CloseStatus,
     close_reason: String val)
@@ -132,18 +141,13 @@ primitive _Open is _ConnectionState
     node._fire_on_idle_timeout()
 
   fun send_text(node: _WebSocketNode ref, data: String val) =>
-    node._send_frame(_FrameEncoder.text(data))
+    node._send_text(data)
 
   fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) =>
-    node._send_frame(_FrameEncoder.binary(data))
+    node._send_binary(data)
 
-  fun close(
-    node: _WebSocketNode ref,
-    code: CloseCode,
-    reason: String val)
-  =>
-    node._send_frame(_FrameEncoder.close(code, reason))
-    node._set_state(_Closing)
+  fun close(node: _WebSocketNode ref, code: CloseCode, reason: String val) =>
+    node._close(code, reason)
 
 primitive _Closing is _ConnectionState
   """
