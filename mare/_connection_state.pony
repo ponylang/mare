@@ -94,6 +94,35 @@ trait val _ConnectionState
     reason: String val)
     """Initiate a close handshake."""
 
+primitive _Connecting is _ConnectionState
+  """
+  Waiting for TCP to open. Client side only.
+
+  A server is handed an already-connected socket, so it never enters this
+  state. Sends are dropped rather than queued: there is no socket to write
+  to yet, which matches what `_send_frame` does under backpressure.
+  """
+
+  fun on_received(node: _WebSocketNode ref, data: Array[U8] iso) => None
+
+  fun on_closed(node: _WebSocketNode ref) =>
+    // Never connected — no user callbacks
+    node._set_state(_Closed)
+
+  fun on_throttled(node: _WebSocketNode ref) => None
+  fun on_unthrottled(node: _WebSocketNode ref) => None
+  fun on_sent(node: _WebSocketNode ref, token: lori.SendToken) => None
+  fun on_idle_timeout(node: _WebSocketNode ref) => None
+  fun send_text(node: _WebSocketNode ref, data: String val) => None
+  fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) => None
+
+  fun close(
+    node: _WebSocketNode ref,
+    code: CloseCode,
+    reason: String val)
+  =>
+    None
+
 primitive _Handshaking is _ConnectionState
   """Exchanging the HTTP upgrade. No WebSocket messages yet."""
 

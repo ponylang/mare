@@ -3,7 +3,8 @@
 // Section 4.1; every one of them means the connection must be failed
 // rather than downgraded to plain HTTP.
 type ClientHandshakeError is
-  ( ClientHandshakeResponseTooLarge
+  ( ClientHandshakeKeyUnavailable
+  | ClientHandshakeResponseTooLarge
   | ClientHandshakeInvalidHTTP
   | ClientHandshakeUnexpectedStatus
   | ClientHandshakeMissingUpgrade
@@ -12,6 +13,19 @@ type ClientHandshakeError is
   | ClientHandshakeAcceptKeyFailed
   | ClientHandshakeUnsolicitedSubprotocol
   | ClientHandshakeUnsolicitedExtension )
+
+primitive ClientHandshakeKeyUnavailable is Stringable
+  """
+  A Sec-WebSocket-Key could not be generated, so no request was sent.
+
+  Unlike the rest of this union, nothing arrived from the server — the
+  failure is local. The CSPRNG could not produce secure bytes, and there is
+  no safe fallback: a predictable key leaves the client unable to tell a
+  completed handshake from a replayed response.
+  """
+  fun string(): String iso^ =>
+    """Returns a human-readable description of this error."""
+    "Could not generate Sec-WebSocket-Key".clone()
 
 primitive ClientHandshakeResponseTooLarge is Stringable
   """The HTTP upgrade response exceeded the maximum allowed size."""

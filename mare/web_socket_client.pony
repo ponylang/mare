@@ -23,19 +23,28 @@ class WebSocketClient is
       host: String,
       port: String,
       from: String,
-      config: WebSocketConfig)
+      config: WebSocketClientConfig val)
     =>
       _ws = WebSocketClient(auth, host, port, from, this, config)
 
     fun ref _websocket(): WebSocketClient => _ws
   ```
+
+  Unlike a server, which is handed an already-connected socket, a client
+  opens the connection itself. lori connects asynchronously, so the
+  upgrade request is not sent from the constructor — it goes out from
+  `_on_connected()`, once there is a socket to write to.
   """
-  let _lifecycle_event_receiver: (WebSocketLifecycleEventReceiver ref | None)
-  let _config: (WebSocketConfig val | None)
+  let _lifecycle_event_receiver:
+    (WebSocketClientLifecycleEventReceiver ref | None)
+  let _config: (WebSocketClientConfig val | None)
+  let _host: String
+  let _port: String
+  let _secure: Bool
   var _tcp_connection: lori.TCPConnection = lori.TCPConnection.none()
   var _state: _ConnectionState = _Closed
-  var _handshake_parser: _HandshakeParser = _HandshakeParser
-  var _frame_parser: _FrameParser = _FrameParser
+  var _handshake: (_ClientHandshake | None) = None
+  var _frame_parser: _FrameParser = _FrameParser(where expect_masked = false)
   var _reassembler: _FragmentReassembler = _FragmentReassembler
 
   new none() =>
@@ -50,6 +59,9 @@ class WebSocketClient is
     """
     _lifecycle_event_receiver = None
     _config = None
+    _host = ""
+    _port = ""
+    _secure = false
 
   new create(
     auth: lori.TCPConnectAuth,
@@ -57,12 +69,15 @@ class WebSocketClient is
     port: String,
     from: String,
     client_actor: WebSocketClientActor ref,
-    config: WebSocketConfig val)
+    config: WebSocketClientConfig val)
   =>
     """Create a plain WebSocket (WS) connection handler."""
     _lifecycle_event_receiver = client_actor
     _config = config
-    _state = _Handshaking
+    _host = host
+    _port = port
+    _secure = false
+    _state = _Connecting
     _tcp_connection =
       lori.TCPConnection.client(auth, host, port, from, client_actor, this)
 
@@ -73,12 +88,15 @@ class WebSocketClient is
     port: String,
     from: String,
     client_actor: WebSocketClientActor ref,
-    config: WebSocketConfig val)
+    config: WebSocketClientConfig val)
   =>
     """Create a secure WebSocket (WSS) connection handler."""
     _lifecycle_event_receiver = client_actor
     _config = config
-    _state = _Handshaking
+    _host = host
+    _port = port
+    _secure = true
+    _state = _Connecting
     _tcp_connection =
       lori.TCPConnection.ssl_client(
         auth, ssl_ctx, host, port, from, client_actor, this)
@@ -98,10 +116,10 @@ class WebSocketClient is
     reason: String val = "")
   =>
     """
-    Initiate a close handshake with the client.
+    Initiate a close handshake with the server.
 
     Sends a close frame and transitions to the Closing state. The
-    connection will close after the client responds with its own close
+    connection will close after the server responds with its own close
     frame, or if TCP drops.
     """
     _state.close(this, code, reason)
@@ -110,7 +128,36 @@ class WebSocketClient is
 
   fun ref _connection(): lori.TCPConnection => _tcp_connection
 
-  fun ref _on_started() => None
+  fun ref _on_connected() =>
+    """
+    Send the upgrade request now that there is a socket to write to.
+
+    The key is generated here rather than in the constructor so that a
+    CSPRNG failure can be reported through `on_handshake_failure()`.
+    """
+    let config = match \exhaustive\ _config
+      | let c: WebSocketClientConfig val => c
+      | None => _Unreachable(); return
+      end
+
+    match \exhaustive\ _ClientKey()
+    | let key: String val =>
+      let handshake = _ClientHandshake(key, config)
+      _handshake = handshake
+      _tcp_connection.send(handshake.request(_host, _port, _secure))
+      _state = _Handshaking
+    | _ClientKeyUnavailable =>
+      _fire_on_handshake_failure(ClientHandshakeKeyUnavailable)
+      _tcp_connection.close()
+      _state = _Closed
+    end
+
+  fun ref _on_connection_failure(reason: lori.ConnectionFailureReason) =>
+    """
+    The connection never opened, so no WebSocket ever existed to close.
+    """
+    _fire_on_connection_failure(reason)
+    _state = _Closed
 
   fun ref _on_received(data: Array[U8] iso): lori.ReadAction =>
     _state.on_received(this, consume data)
@@ -118,9 +165,6 @@ class WebSocketClient is
 
   fun ref _on_closed() =>
     _state.on_closed(this)
-
-  fun ref _on_start_failure(reason: lori.StartFailureReason) =>
-    _state = _Closed
 
   fun ref _on_throttled() =>
     _state.on_throttled(this)
@@ -149,44 +193,25 @@ class WebSocketClient is
     _state = state
 
   fun ref _feed_handshake(data: Array[U8] iso) =>
-    """Process incoming data during the handshake phase."""
-    let max_size = match \exhaustive\ _config
-      | let c: WebSocketConfig val => c.max_handshake_size
+    """Validate the server's upgrade response."""
+    let handshake = match \exhaustive\ _handshake
+      | let h: _ClientHandshake => h
       | None => _Unreachable(); return
       end
 
-    match \exhaustive\ _handshake_parser(consume data, max_size)
-    | _HandshakeNeedMore => None
-    | let result: _HandshakeResult =>
-      match \exhaustive\ _lifecycle_event_receiver
-      | let r: WebSocketLifecycleEventReceiver ref =>
-        if r.on_upgrade_request(result.request) then
-          // Accept: send 101 response
-          _send_101_response(result.accept_key)
-          _state = _Open
-          _fire_on_open(result.request)
-          // Forward any remaining bytes to frame parser
-          if result.remaining.size() > 0 then
-            _feed_frames_from_val(result.remaining)
-          end
-        else
-          // Reject: send 403 and close
-          _send_http_error("403 Forbidden")
-          _tcp_connection.close()
-          _state = _Closed
-        end
-      | None => _Unreachable()
+    match \exhaustive\ handshake(consume data)
+    | _ClientHandshakeNeedMore => None
+    | let result: _ClientHandshakeResult =>
+      _state = _Open
+      _fire_on_open(result.response)
+      // Forward any frame bytes that arrived in the same segment
+      if result.remaining.size() > 0 then
+        _feed_frames_from_val(result.remaining)
       end
-    | let err: ServerHandshakeError =>
-      match err
-      | ServerHandshakeWrongVersion =>
-        _send_http_error("426 Upgrade Required",
-          "Sec-WebSocket-Version: 13\r\n")
-      | ServerHandshakeAcceptKeyFailed =>
-        _send_http_error("500 Internal Server Error")
-      else
-        _send_http_error("400 Bad Request")
-      end
+    | let err: ClientHandshakeError =>
+      // No WebSocket was established, so there is no close handshake to
+      // perform and no on_closed to deliver — just drop the TCP connection.
+      _fire_on_handshake_failure(err)
       _tcp_connection.close()
       _state = _Closed
     end
@@ -253,7 +278,7 @@ class WebSocketClient is
       // Pong — discard
       None
     | 0x08 =>
-      // Close — echo the client's close payload (status code + reason)
+      // Close — echo the server's close payload (status code + reason)
       if frame.payload.size() >= 2 then
         _send_close_payload(frame.payload)
       else
@@ -267,7 +292,7 @@ class WebSocketClient is
     else
       // Data frame (text, binary, continuation) — reassemble
       let max_size = match \exhaustive\ _config
-        | let c: WebSocketConfig val => c.max_message_size
+        | let c: WebSocketClientConfig val => c.max_message_size
         | None => _Unreachable(); return
         end
 
@@ -354,49 +379,40 @@ class WebSocketClient is
     _send_close_frame(code, reason)
     _set_state(_Closing)
 
-  fun ref _send_101_response(accept_key: String val) =>
-    """Send the HTTP 101 Switching Protocols response."""
-    let response: String val = recover val
-      String(256)
-        .>append("HTTP/1.1 101 Switching Protocols\r\n")
-        .>append("Upgrade: websocket\r\n")
-        .>append("Connection: Upgrade\r\n")
-        .>append("Sec-WebSocket-Accept: ")
-        .>append(accept_key)
-        .>append("\r\n\r\n")
-    end
-    _tcp_connection.send(response)
+  // -- Lifecycle event delivery --
 
-  fun ref _send_http_error(
-    status: String val,
-    extra_headers: String val = "")
+  fun ref _fire_on_connection_failure(
+    reason: lori.ConnectionFailureReason)
   =>
-    """Send an HTTP error response and close."""
-    let response: String val = recover val
-      String(256)
-        .>append("HTTP/1.1 ")
-        .>append(status)
-        .>append("\r\n")
-        .>append(extra_headers)
-        .>append("Content-Length: 0\r\n\r\n")
-    end
-    _tcp_connection.send(response)
-
-  fun ref _fire_on_open(request: UpgradeRequest val) =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_open(request)
+    | let r: WebSocketClientLifecycleEventReceiver ref =>
+      r.on_connection_failure(reason)
+    | None => _Unreachable()
+    end
+
+  fun ref _fire_on_handshake_failure(err: ClientHandshakeError) =>
+    match \exhaustive\ _lifecycle_event_receiver
+    | let r: WebSocketClientLifecycleEventReceiver ref =>
+      r.on_handshake_failure(err)
+    | None => _Unreachable()
+    end
+
+  fun ref _fire_on_open(response: UpgradeResponse val) =>
+    match \exhaustive\ _lifecycle_event_receiver
+    | let r: WebSocketClientLifecycleEventReceiver ref => r.on_open(response)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_text(data: String val) =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_text_message(data)
+    | let r: WebSocketClientLifecycleEventReceiver ref =>
+      r.on_text_message(data)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_binary(data: Array[U8] val) =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref =>
+    | let r: WebSocketClientLifecycleEventReceiver ref =>
       r.on_binary_message(data)
     | None => _Unreachable()
     end
@@ -406,25 +422,25 @@ class WebSocketClient is
     close_reason: String val)
   =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref =>
+    | let r: WebSocketClientLifecycleEventReceiver ref =>
       r.on_closed(close_status, close_reason)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_throttled() =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_throttled()
+    | let r: WebSocketClientLifecycleEventReceiver ref => r.on_throttled()
     | None => _Unreachable()
     end
 
   fun ref _fire_on_unthrottled() =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_unthrottled()
+    | let r: WebSocketClientLifecycleEventReceiver ref => r.on_unthrottled()
     | None => _Unreachable()
     end
 
   fun ref _fire_on_idle_timeout() =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_idle_timeout()
+    | let r: WebSocketClientLifecycleEventReceiver ref => r.on_idle_timeout()
     | None => _Unreachable()
     end
