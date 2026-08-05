@@ -8,7 +8,12 @@ trait ref _WebSocketNode
   is what lets them share one set of state primitives. The states only ever
   reach a handler through this trait, so each side is free to give these
   methods a direction-appropriate meaning: `_feed_handshake` parses an
-  upgrade request on the server and an upgrade response on the client.
+  upgrade request on the server and an upgrade response on the client, and
+  the `_send_*` methods mask on the client but not on the server.
+
+  Every method is abstract. None gets a default body, because a default
+  here would be a no-op: an implementer who omitted one would silently
+  stop sending rather than fail to compile.
   """
 
   fun ref _set_state(state: _ConnectionState)
@@ -23,17 +28,14 @@ trait ref _WebSocketNode
   fun ref _feed_frames_closing(data: Array[U8] iso)
     """Process incoming frame data in the Closing state."""
 
-  fun ref _send_frame(data: Array[U8] val)
-    """Send an encoded frame over TCP."""
+  fun ref _send_text(data: String val)
+    """Encode and send a text message."""
 
-  fun ref _send_text(data: String val) =>
-    """Send a text message."""
+  fun ref _send_binary(data: Array[U8] val)
+    """Encode and send a binary message."""
 
-  fun ref _send_binary(data: Array[U8] val) =>
-    """Send a binary message."""
-
-  fun ref _close(code: CloseCode, reason: String val) =>
-    """Send a binary message."""
+  fun ref _close(code: CloseCode, reason: String val)
+    """Send a close frame and await the peer's response."""
 
   fun ref _fire_on_closed(
     close_status: CloseStatus,
