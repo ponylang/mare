@@ -16,7 +16,7 @@ Mare follows lori's "your actor IS the connection" pattern:
 The `WebSocketServer` class handles all protocol details — HTTP upgrade
 handshake, frame parsing, masking, fragmentation, and the close
 handshake — and delivers application-level events through the
-`WebSocketLifecycleEventReceiver` callbacks.
+`WebSocketServerLifecycleEventReceiver` callbacks.
 
 ## Quick Start
 
@@ -29,15 +29,15 @@ use "mare"
 actor Main
   new create(env: Env) =>
     let auth = lori.TCPListenAuth(env.root)
-    let config = WebSocketConfig(where host' = "localhost", port' = "8080")
+    let config = WebSocketServerConfig(where host' = "localhost", port' = "8080")
     EchoListener(auth, config)
 
 actor EchoListener is lori.TCPListenerActor
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
-  let _config: WebSocketConfig val
+  let _config: WebSocketServerConfig val
 
-  new create(auth: lori.TCPListenAuth, config: WebSocketConfig val) =>
+  new create(auth: lori.TCPListenAuth, config: WebSocketServerConfig val) =>
     _server_auth = lori.TCPServerAuth(auth)
     _config = config
     _tcp_listener = lori.TCPListener(auth, config.host, config.port, this)
@@ -53,7 +53,7 @@ actor EchoHandler is WebSocketServerActor
   var _ws: WebSocketServer = WebSocketServer.none()
 
   new create(auth: lori.TCPServerAuth, fd: U32,
-    config: WebSocketConfig val)
+    config: WebSocketServerConfig val)
   =>
     _ws = WebSocketServer(auth, fd, this, config)
 
@@ -83,7 +83,7 @@ actor SecureHandler is WebSocketServerActor
   var _ws: WebSocketServer = WebSocketServer.none()
 
   new create(auth: lori.TCPServerAuth, ssl_ctx: ssl_net.SSLContext val,
-    fd: U32, config: WebSocketConfig val)
+    fd: U32, config: WebSocketServerConfig val)
   =>
     _ws = WebSocketServer.ssl(auth, ssl_ctx, fd, this, config)
 
@@ -92,7 +92,7 @@ actor SecureHandler is WebSocketServerActor
 
 ## Configuration
 
-`WebSocketConfig` controls connection behavior:
+`WebSocketServerConfig` controls connection behavior:
 
 - `host` / `port` — bind address (defaults: `"localhost"` / `"8080"`)
 - `max_message_size` — maximum reassembled message size in bytes

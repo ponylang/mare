@@ -11,7 +11,7 @@ trait WebSocketClientLifecycleEventReceiver
   fragments are received and validated.
 
   This is the client counterpart to
-  `WebSocketLifecycleEventReceiver`. It has no `on_upgrade_request()`,
+  `WebSocketServerLifecycleEventReceiver`. It has no `on_upgrade_request()`,
   since a client is the side making the request, and it adds two failure
   callbacks the server side has no analogue for: `on_connection_failure()`
   when the connection never opens, and `on_handshake_failure()` when TCP

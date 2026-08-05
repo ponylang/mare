@@ -15,7 +15,7 @@ use ws = "../../mare"
 actor Main
   new create(env: Env) =>
     let auth = lori.TCPListenAuth(env.root)
-    let config = ws.WebSocketConfig(where
+    let config = ws.WebSocketServerConfig(where
       host' = "localhost",
       port' = "8083")
     ChatListener(auth, config, env.out)
@@ -23,13 +23,13 @@ actor Main
 actor ChatListener is lori.TCPListenerActor
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
-  let _config: ws.WebSocketConfig val
+  let _config: ws.WebSocketServerConfig val
   let _out: OutStream
   let _handlers: collections.SetIs[ChatHandler tag] = collections.SetIs[ChatHandler tag]
 
   new create(
     auth: lori.TCPListenAuth,
-    config: ws.WebSocketConfig val,
+    config: ws.WebSocketServerConfig val,
     out: OutStream)
   =>
     _server_auth = lori.TCPServerAuth(auth)
@@ -71,7 +71,7 @@ actor ChatHandler is ws.WebSocketServerActor
   new create(
     auth: lori.TCPServerAuth,
     fd: U32,
-    config: ws.WebSocketConfig val,
+    config: ws.WebSocketServerConfig val,
     out: OutStream,
     listener: ChatListener tag)
   =>

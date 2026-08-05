@@ -1,4 +1,4 @@
-trait WebSocketLifecycleEventReceiver
+trait WebSocketServerLifecycleEventReceiver
   """
   WebSocket lifecycle callbacks delivered to the connection actor.
 

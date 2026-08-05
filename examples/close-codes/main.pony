@@ -15,7 +15,7 @@ use ws = "../../mare"
 actor Main
   new create(env: Env) =>
     let auth = lori.TCPListenAuth(env.root)
-    let config = ws.WebSocketConfig(where
+    let config = ws.WebSocketServerConfig(where
       host' = "localhost",
       port' = "8082")
     CloseListener(auth, config, env.out)
@@ -23,12 +23,12 @@ actor Main
 actor CloseListener is lori.TCPListenerActor
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
-  let _config: ws.WebSocketConfig val
+  let _config: ws.WebSocketServerConfig val
   let _out: OutStream
 
   new create(
     auth: lori.TCPListenAuth,
-    config: ws.WebSocketConfig val,
+    config: ws.WebSocketServerConfig val,
     out: OutStream)
   =>
     _server_auth = lori.TCPServerAuth(auth)
@@ -54,7 +54,7 @@ actor CloseHandler is ws.WebSocketServerActor
   new create(
     auth: lori.TCPServerAuth,
     fd: U32,
-    config: ws.WebSocketConfig val,
+    config: ws.WebSocketServerConfig val,
     out: OutStream)
   =>
     _out = out

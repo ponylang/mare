@@ -34,7 +34,7 @@ actor Main
       end
 
     let auth = lori.TCPListenAuth(env.root)
-    let config = ws.WebSocketConfig(where
+    let config = ws.WebSocketServerConfig(where
       host' = "localhost",
       port' = "8443")
     WssListener(auth, config, env.out, sslctx)
@@ -42,13 +42,13 @@ actor Main
 actor WssListener is lori.TCPListenerActor
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
-  let _config: ws.WebSocketConfig val
+  let _config: ws.WebSocketServerConfig val
   let _out: OutStream
   let _ssl_ctx: ssl_net.SSLContext val
 
   new create(
     auth: lori.TCPListenAuth,
-    config: ws.WebSocketConfig val,
+    config: ws.WebSocketServerConfig val,
     out: OutStream,
     ssl_ctx: ssl_net.SSLContext val)
   =>
@@ -76,7 +76,7 @@ actor WssHandler is ws.WebSocketServerActor
   new create(
     auth: lori.TCPServerAuth,
     fd: U32,
-    config: ws.WebSocketConfig val,
+    config: ws.WebSocketServerConfig val,
     out: OutStream,
     ssl_ctx: ssl_net.SSLContext val)
   =>

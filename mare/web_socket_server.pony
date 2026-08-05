@@ -19,15 +19,15 @@ class WebSocketServer is
     var _ws: WebSocketServer = WebSocketServer.none()
 
     new create(auth: lori.TCPServerAuth, fd: U32,
-      config: WebSocketConfig val)
+      config: WebSocketServerConfig val)
     =>
       _ws = WebSocketServer(auth, fd, this, config)
 
     fun ref _websocket(): WebSocketServer => _ws
   ```
   """
-  let _lifecycle_event_receiver: (WebSocketLifecycleEventReceiver ref | None)
-  let _config: (WebSocketConfig val | None)
+  let _lifecycle_event_receiver: (WebSocketServerLifecycleEventReceiver ref | None)
+  let _config: (WebSocketServerConfig val | None)
   var _tcp_connection: lori.TCPConnection = lori.TCPConnection.none()
   var _state: _ConnectionState = _Closed
   var _handshake_parser: _HandshakeParser = _HandshakeParser
@@ -51,7 +51,7 @@ class WebSocketServer is
     auth: lori.TCPServerAuth,
     fd: U32,
     server_actor: WebSocketServerActor ref,
-    config: WebSocketConfig val)
+    config: WebSocketServerConfig val)
   =>
     """Create a plain WebSocket (WS) connection handler."""
     _lifecycle_event_receiver = server_actor
@@ -65,7 +65,7 @@ class WebSocketServer is
     ssl_ctx: ssl_net.SSLContext val,
     fd: U32,
     server_actor: WebSocketServerActor ref,
-    config: WebSocketConfig val)
+    config: WebSocketServerConfig val)
   =>
     """Create a secure WebSocket (WSS) connection handler."""
     _lifecycle_event_receiver = server_actor
@@ -143,7 +143,7 @@ class WebSocketServer is
   fun ref _feed_handshake(data: Array[U8] iso) =>
     """Process incoming data during the handshake phase."""
     let max_size = match \exhaustive\ _config
-      | let c: WebSocketConfig val => c.max_handshake_size
+      | let c: WebSocketServerConfig val => c.max_handshake_size
       | None => _Unreachable(); return
       end
 
@@ -151,7 +151,7 @@ class WebSocketServer is
     | _HandshakeNeedMore => None
     | let result: _HandshakeResult =>
       match \exhaustive\ _lifecycle_event_receiver
-      | let r: WebSocketLifecycleEventReceiver ref =>
+      | let r: WebSocketServerLifecycleEventReceiver ref =>
         if r.on_upgrade_request(result.request) then
           // Accept: send 101 response
           _send_101_response(result.accept_key)
@@ -259,7 +259,7 @@ class WebSocketServer is
     else
       // Data frame (text, binary, continuation) — reassemble
       let max_size = match \exhaustive\ _config
-        | let c: WebSocketConfig val => c.max_message_size
+        | let c: WebSocketServerConfig val => c.max_message_size
         | None => _Unreachable(); return
         end
 
@@ -357,19 +357,19 @@ class WebSocketServer is
 
   fun ref _fire_on_open(request: UpgradeRequest val) =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_open(request)
+    | let r: WebSocketServerLifecycleEventReceiver ref => r.on_open(request)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_text(data: String val) =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_text_message(data)
+    | let r: WebSocketServerLifecycleEventReceiver ref => r.on_text_message(data)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_binary(data: Array[U8] val) =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref =>
+    | let r: WebSocketServerLifecycleEventReceiver ref =>
       r.on_binary_message(data)
     | None => _Unreachable()
     end
@@ -379,25 +379,25 @@ class WebSocketServer is
     close_reason: String val)
   =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref =>
+    | let r: WebSocketServerLifecycleEventReceiver ref =>
       r.on_closed(close_status, close_reason)
     | None => _Unreachable()
     end
 
   fun ref _fire_on_throttled() =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_throttled()
+    | let r: WebSocketServerLifecycleEventReceiver ref => r.on_throttled()
     | None => _Unreachable()
     end
 
   fun ref _fire_on_unthrottled() =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_unthrottled()
+    | let r: WebSocketServerLifecycleEventReceiver ref => r.on_unthrottled()
     | None => _Unreachable()
     end
 
   fun ref _fire_on_idle_timeout() =>
     match \exhaustive\ _lifecycle_event_receiver
-    | let r: WebSocketLifecycleEventReceiver ref => r.on_idle_timeout()
+    | let r: WebSocketServerLifecycleEventReceiver ref => r.on_idle_timeout()
     | None => _Unreachable()
     end

@@ -1,4 +1,4 @@
-class val WebSocketConfig
+class val WebSocketServerConfig
   """
   Immutable configuration for a WebSocket connection.
 
@@ -6,7 +6,7 @@ class val WebSocketConfig
   override specific values:
 
   ```pony
-  let config = WebSocketConfig(where
+  let config = WebSocketServerConfig(where
     host' = "0.0.0.0",
     port' = "9090",
     max_message_size' = 4_194_304)

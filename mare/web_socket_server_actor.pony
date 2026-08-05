@@ -1,12 +1,12 @@
 use lori = "lori"
 
 trait tag WebSocketServerActor is
-  (lori.TCPConnectionActor & WebSocketLifecycleEventReceiver)
+  (lori.TCPConnectionActor & WebSocketServerLifecycleEventReceiver)
   """
   Trait for actors that serve WebSocket connections.
 
   Extends `TCPConnectionActor` (for lori ASIO plumbing) and
-  `WebSocketLifecycleEventReceiver` (for WebSocket-level callbacks).
+  `WebSocketServerLifecycleEventReceiver` (for WebSocket-level callbacks).
   The actor stores a `WebSocketServer` as a field and implements
   `_websocket()` to return it. All other required methods
   have default implementations that delegate to the protocol.
@@ -18,7 +18,7 @@ trait tag WebSocketServerActor is
     var _ws: WebSocketServer = WebSocketServer.none()
 
     new create(auth: lori.TCPServerAuth, fd: U32,
-      config: WebSocketConfig)
+      config: WebSocketServerConfig)
     =>
       _ws = WebSocketServer(auth, fd, this, config)
 
