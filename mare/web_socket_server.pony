@@ -169,12 +169,12 @@ class WebSocketServer is
         end
       | None => _Unreachable()
       end
-    | let err: HandshakeError =>
+    | let err: ServerHandshakeError =>
       match err
-      | HandshakeWrongVersion =>
+      | ServerHandshakeWrongVersion =>
         _send_http_error("426 Upgrade Required",
           "Sec-WebSocket-Version: 13\r\n")
-      | HandshakeAcceptKeyFailed =>
+      | ServerHandshakeAcceptKeyFailed =>
         _send_http_error("500 Internal Server Error")
       else
         _send_http_error("400 Bad Request")

@@ -14,19 +14,19 @@ class _HandshakeParser
   fun ref apply(
     data: Array[U8] iso,
     max_size: USize)
-    : (_HandshakeResult | _HandshakeNeedMore | HandshakeError)
+    : (_HandshakeResult | _HandshakeNeedMore | ServerHandshakeError)
   =>
     """
     Feed incoming data into the buffer and attempt to parse.
 
     Returns `_HandshakeNeedMore` if the full HTTP request hasn't arrived
-    yet, a `_HandshakeResult` on success, or a `HandshakeError` on
+    yet, a `_HandshakeResult` on success, or a `ServerHandshakeError` on
     failure.
     """
     _buf.append(consume data)
 
     if _buf.size() > max_size then
-      return HandshakeRequestTooLarge
+      return ServerHandshakeRequestTooLarge
     end
 
     match \exhaustive\ _find_header_end()
@@ -54,7 +54,7 @@ class _HandshakeParser
     None
 
   fun _parse_request(header_end: USize)
-    : (_HandshakeResult | HandshakeError)
+    : (_HandshakeResult | ServerHandshakeError)
   =>
     """Parse the buffered HTTP request up to header_end."""
     // Build request string from buffer bytes. String.clone() gives iso^
@@ -74,12 +74,12 @@ class _HandshakeParser
     try
       let request_line = lines(0)?
       let parts = request_line.split(" ")
-      if parts.size() < 3 then return HandshakeInvalidHTTP end
+      if parts.size() < 3 then return ServerHandshakeInvalidHTTP end
       let method = parts(0)?
       let uri = parts(1)?
       let version = parts(2)?
-      if method != "GET" then return HandshakeInvalidHTTP end
-      if version != "HTTP/1.1" then return HandshakeInvalidHTTP end
+      if method != "GET" then return ServerHandshakeInvalidHTTP end
+      if version != "HTTP/1.1" then return ServerHandshakeInvalidHTTP end
 
       // Parse headers
       let headers = recover val
@@ -129,14 +129,14 @@ class _HandshakeParser
         end
       end
 
-      if not has_host then return HandshakeMissingHost end
-      if not has_upgrade then return HandshakeMissingUpgrade end
-      if not has_connection_upgrade then return HandshakeMissingUpgrade end
+      if not has_host then return ServerHandshakeMissingHost end
+      if not has_upgrade then return ServerHandshakeMissingUpgrade end
+      if not has_connection_upgrade then return ServerHandshakeMissingUpgrade end
 
       match \exhaustive\ websocket_version
       | let v: String val =>
-        if v != "13" then return HandshakeWrongVersion end
-      | None => return HandshakeWrongVersion
+        if v != "13" then return ServerHandshakeWrongVersion end
+      | None => return ServerHandshakeWrongVersion
       end
 
       match \exhaustive\ websocket_key
@@ -145,14 +145,14 @@ class _HandshakeParser
           try
             Base64.decode[Array[U8] iso](key)?.size()
           else
-            return HandshakeInvalidKey
+            return ServerHandshakeInvalidKey
           end
-        if decoded_size != 16 then return HandshakeInvalidKey end
+        if decoded_size != 16 then return ServerHandshakeInvalidKey end
         let accept_key =
           try
             _compute_accept_key(key)?
           else
-            return HandshakeAcceptKeyFailed
+            return ServerHandshakeAcceptKeyFailed
           end
 
         // Extract remaining bytes after \r\n\r\n using String
@@ -168,10 +168,10 @@ class _HandshakeParser
 
         let request = UpgradeRequest(uri, headers)
         _HandshakeResult(request, accept_key, remaining)
-      | None => HandshakeMissingKey
+      | None => ServerHandshakeMissingKey
       end
     else
-      HandshakeInvalidHTTP
+      ServerHandshakeInvalidHTTP
     end
 
   fun _compute_accept_key(key: String val): String val ? =>

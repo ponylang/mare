@@ -1,33 +1,33 @@
 // Errors that can occur during WebSocket HTTP upgrade handshake validation.
-type HandshakeError is
-  ( HandshakeRequestTooLarge
-  | HandshakeInvalidHTTP
-  | HandshakeMissingHost
-  | HandshakeMissingUpgrade
-  | HandshakeWrongVersion
-  | HandshakeMissingKey
-  | HandshakeInvalidKey
-  | HandshakeAcceptKeyFailed )
+type ServerHandshakeError is
+  ( ServerHandshakeRequestTooLarge
+  | ServerHandshakeInvalidHTTP
+  | ServerHandshakeMissingHost
+  | ServerHandshakeMissingUpgrade
+  | ServerHandshakeWrongVersion
+  | ServerHandshakeMissingKey
+  | ServerHandshakeInvalidKey
+  | ServerHandshakeAcceptKeyFailed )
 
-primitive HandshakeRequestTooLarge is Stringable
+primitive ServerHandshakeRequestTooLarge is Stringable
   """The HTTP upgrade request exceeded the maximum allowed size."""
   fun string(): String iso^ =>
     """Returns a human-readable description of this error."""
     "Handshake request too large".clone()
 
-primitive HandshakeInvalidHTTP is Stringable
+primitive ServerHandshakeInvalidHTTP is Stringable
   """The HTTP request line was malformed or not a GET request."""
   fun string(): String iso^ =>
     """Returns a human-readable description of this error."""
     "Invalid HTTP request".clone()
 
-primitive HandshakeMissingHost is Stringable
+primitive ServerHandshakeMissingHost is Stringable
   """The required Host header was missing."""
   fun string(): String iso^ =>
     """Returns a human-readable description of this error."""
     "Missing Host header".clone()
 
-primitive HandshakeMissingUpgrade is Stringable
+primitive ServerHandshakeMissingUpgrade is Stringable
   """
   The required Upgrade and Connection headers were missing or had
   incorrect values.
@@ -36,19 +36,19 @@ primitive HandshakeMissingUpgrade is Stringable
     """Returns a human-readable description of this error."""
     "Missing or invalid Upgrade/Connection headers".clone()
 
-primitive HandshakeWrongVersion is Stringable
+primitive ServerHandshakeWrongVersion is Stringable
   """The Sec-WebSocket-Version header was not 13."""
   fun string(): String iso^ =>
     """Returns a human-readable description of this error."""
     "Wrong WebSocket version (expected 13)".clone()
 
-primitive HandshakeMissingKey is Stringable
+primitive ServerHandshakeMissingKey is Stringable
   """The Sec-WebSocket-Key header was missing."""
   fun string(): String iso^ =>
     """Returns a human-readable description of this error."""
     "Missing Sec-WebSocket-Key header".clone()
 
-primitive HandshakeInvalidKey is Stringable
+primitive ServerHandshakeInvalidKey is Stringable
   """
   The Sec-WebSocket-Key header was not a valid base64-encoded
   16-byte value.
@@ -57,7 +57,7 @@ primitive HandshakeInvalidKey is Stringable
     """Returns a human-readable description of this error."""
     "Invalid Sec-WebSocket-Key (must be base64-encoded 16 bytes)".clone()
 
-primitive HandshakeAcceptKeyFailed is Stringable
+primitive ServerHandshakeAcceptKeyFailed is Stringable
   """
   The Sec-WebSocket-Accept value could not be computed.
 

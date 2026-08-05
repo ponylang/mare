@@ -42,7 +42,7 @@ class \nodoc\ iso _TestHandshakeValid is UnitTest
       h.assert_eq[USize](0, result.remaining.size())
     | _HandshakeNeedMore =>
       h.fail("expected result, got need more")
-    | let err: HandshakeError =>
+    | let err: ServerHandshakeError =>
       h.fail("expected result, got error")
     end
 
@@ -67,25 +67,25 @@ class \nodoc\ iso _TestHandshakeRemainingBytes is UnitTest
       h.assert_eq[U8](0x81, result.remaining(0)?)
       h.assert_eq[U8](0x85, result.remaining(1)?)
     | _HandshakeNeedMore => h.fail("expected result")
-    | let err: HandshakeError => h.fail("expected result")
+    | let err: ServerHandshakeError => h.fail("expected result")
     end
 
 class \nodoc\ iso _TestHandshakeTooLarge is UnitTest
-  """Request exceeding max size produces HandshakeRequestTooLarge."""
+  """Request exceeding max size produces ServerHandshakeRequestTooLarge."""
   fun name(): String => "handshake/too_large"
 
   fun apply(h: TestHelper) =>
     let parser = _HandshakeParser
     let data = _TestHandshakeHelper.valid_request()
     match \exhaustive\ parser(consume data, 10) // tiny max_size
-    | HandshakeRequestTooLarge => None // expected
+    | ServerHandshakeRequestTooLarge => None // expected
     | _HandshakeNeedMore => h.fail("expected too large error")
     | let _: _HandshakeResult => h.fail("expected too large error")
-    | let err: HandshakeError => h.fail("wrong error type")
+    | let err: ServerHandshakeError => h.fail("wrong error type")
     end
 
 class \nodoc\ iso _TestHandshakeInvalidMethod is UnitTest
-  """Non-GET method produces HandshakeInvalidHTTP."""
+  """Non-GET method produces ServerHandshakeInvalidHTTP."""
   fun name(): String => "handshake/invalid_method"
 
   fun apply(h: TestHelper) =>
@@ -102,14 +102,14 @@ class \nodoc\ iso _TestHandshakeInvalidMethod is UnitTest
     end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
-    | HandshakeInvalidHTTP => None // expected
+    | ServerHandshakeInvalidHTTP => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
-    | let err: HandshakeError => h.fail("wrong error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("wrong error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakeMissingHost is UnitTest
-  """Missing Host header produces HandshakeMissingHost."""
+  """Missing Host header produces ServerHandshakeMissingHost."""
   fun name(): String => "handshake/missing_host"
 
   fun apply(h: TestHelper) =>
@@ -125,14 +125,14 @@ class \nodoc\ iso _TestHandshakeMissingHost is UnitTest
     end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
-    | HandshakeMissingHost => None // expected
+    | ServerHandshakeMissingHost => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
-    | let err: HandshakeError => h.fail("wrong error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("wrong error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakeMissingUpgrade is UnitTest
-  """Missing Upgrade header produces HandshakeMissingUpgrade."""
+  """Missing Upgrade header produces ServerHandshakeMissingUpgrade."""
   fun name(): String => "handshake/missing_upgrade"
 
   fun apply(h: TestHelper) =>
@@ -148,14 +148,14 @@ class \nodoc\ iso _TestHandshakeMissingUpgrade is UnitTest
     end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
-    | HandshakeMissingUpgrade => None // expected
+    | ServerHandshakeMissingUpgrade => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
-    | let err: HandshakeError => h.fail("wrong error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("wrong error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakeWrongVersion is UnitTest
-  """Wrong Sec-WebSocket-Version produces HandshakeWrongVersion."""
+  """Wrong Sec-WebSocket-Version produces ServerHandshakeWrongVersion."""
   fun name(): String => "handshake/wrong_version"
 
   fun apply(h: TestHelper) =>
@@ -172,14 +172,14 @@ class \nodoc\ iso _TestHandshakeWrongVersion is UnitTest
     end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
-    | HandshakeWrongVersion => None // expected
+    | ServerHandshakeWrongVersion => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
-    | let err: HandshakeError => h.fail("wrong error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("wrong error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakeMissingKey is UnitTest
-  """Missing Sec-WebSocket-Key produces HandshakeMissingKey."""
+  """Missing Sec-WebSocket-Key produces ServerHandshakeMissingKey."""
   fun name(): String => "handshake/missing_key"
 
   fun apply(h: TestHelper) =>
@@ -195,14 +195,14 @@ class \nodoc\ iso _TestHandshakeMissingKey is UnitTest
     end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
-    | HandshakeMissingKey => None // expected
+    | ServerHandshakeMissingKey => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
-    | let err: HandshakeError => h.fail("wrong error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("wrong error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakeInvalidKeyBadBase64 is UnitTest
-  """Key with non-base64 characters produces HandshakeInvalidKey."""
+  """Key with non-base64 characters produces ServerHandshakeInvalidKey."""
   fun name(): String => "handshake/invalid_key_bad_base64"
 
   fun apply(h: TestHelper) =>
@@ -210,14 +210,14 @@ class \nodoc\ iso _TestHandshakeInvalidKeyBadBase64 is UnitTest
       where key = "!!!invalid-key!!!!!!!!!==")
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume data, 8192)
-    | HandshakeInvalidKey => None // expected
+    | ServerHandshakeInvalidKey => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
-    | let err: HandshakeError => h.fail("wrong error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("wrong error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakeInvalidKeyWrongLength is UnitTest
-  """Valid base64 that decodes to != 16 bytes produces HandshakeInvalidKey."""
+  """Valid base64 that decodes to != 16 bytes produces ServerHandshakeInvalidKey."""
   fun name(): String => "handshake/invalid_key_wrong_length"
 
   fun apply(h: TestHelper) =>
@@ -225,10 +225,10 @@ class \nodoc\ iso _TestHandshakeInvalidKeyWrongLength is UnitTest
     let data = _TestHandshakeHelper.valid_request(where key = "dGVzdA==")
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume data, 8192)
-    | HandshakeInvalidKey => None // expected
+    | ServerHandshakeInvalidKey => None // expected
     | _HandshakeNeedMore => h.fail("expected error")
     | let _: _HandshakeResult => h.fail("expected error")
-    | let err: HandshakeError => h.fail("wrong error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("wrong error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakeCaseInsensitive is UnitTest
@@ -252,7 +252,7 @@ class \nodoc\ iso _TestHandshakeCaseInsensitive is UnitTest
     | let result: _HandshakeResult =>
       h.assert_eq[String]("/", result.request.uri)
     | _HandshakeNeedMore => h.fail("expected result")
-    | let err: HandshakeError => h.fail("unexpected error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("unexpected error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakeIncremental is UnitTest
@@ -280,7 +280,7 @@ class \nodoc\ iso _TestHandshakeIncremental is UnitTest
     match \exhaustive\ parser(consume first_half, 8192)
     | _HandshakeNeedMore => None // expected
     | let _: _HandshakeResult => h.fail("too early")
-    | let err: HandshakeError => h.fail("unexpected error")
+    | let err: ServerHandshakeError => h.fail("unexpected error")
     end
 
     let second_half = recover iso
@@ -297,7 +297,7 @@ class \nodoc\ iso _TestHandshakeIncremental is UnitTest
     | let result: _HandshakeResult =>
       h.assert_eq[String]("/", result.request.uri)
     | _HandshakeNeedMore => h.fail("expected result after second chunk")
-    | let err: HandshakeError => h.fail("unexpected error on second chunk")
+    | let err: ServerHandshakeError => h.fail("unexpected error on second chunk")
     end
 
 class \nodoc\ iso _TestHandshakeRfc6455AcceptKey is UnitTest
@@ -316,7 +316,7 @@ class \nodoc\ iso _TestHandshakeRfc6455AcceptKey is UnitTest
     | let result: _HandshakeResult =>
       h.assert_eq[String]("s3pPLMBiTxaQ9kYGzzhZRbK+xOo=", result.accept_key)
     | _HandshakeNeedMore => h.fail("expected result")
-    | let err: HandshakeError => h.fail("unexpected error")
+    | let err: ServerHandshakeError => h.fail("unexpected error")
     end
 
 class \nodoc\ iso _TestHandshakeConnectionMultiToken is UnitTest
@@ -343,7 +343,7 @@ class \nodoc\ iso _TestHandshakeConnectionMultiToken is UnitTest
     | let result: _HandshakeResult =>
       h.assert_eq[String]("/", result.request.uri)
     | _HandshakeNeedMore => h.fail("expected result")
-    | let err: HandshakeError => h.fail("unexpected error: " + err.string())
+    | let err: ServerHandshakeError => h.fail("unexpected error: " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakePropertyValidRequests is Property1[String]
@@ -362,7 +362,7 @@ class \nodoc\ iso _TestHandshakePropertyValidRequests is Property1[String]
       h.assert_eq[String](test_uri, result.request.uri)
     | _HandshakeNeedMore =>
       h.fail("expected result for uri: " + test_uri)
-    | let err: HandshakeError =>
+    | let err: ServerHandshakeError =>
       h.fail("unexpected error for uri: " + test_uri)
     end
 
@@ -384,14 +384,14 @@ class \nodoc\ iso _TestHandshakePropertyValidKeys is Property1[String]
     | let result: _HandshakeResult => None // success expected
     | _HandshakeNeedMore =>
       h.fail("expected result for key: " + key)
-    | let err: HandshakeError =>
+    | let err: ServerHandshakeError =>
       h.fail("unexpected error for key: " + key + " — " + err.string())
     end
 
 class \nodoc\ iso _TestHandshakePropertyInvalidKeyLength is Property1[String]
   """
   Random byte strings of length != 16, base64-encoded, always produce
-  HandshakeInvalidKey.
+  ServerHandshakeInvalidKey.
   """
   fun name(): String => "handshake/property_invalid_key_length"
 
@@ -406,11 +406,11 @@ class \nodoc\ iso _TestHandshakePropertyInvalidKeyLength is Property1[String]
     let data = _TestHandshakeHelper.valid_request(where key = key)
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume data, 8192)
-    | HandshakeInvalidKey => None // expected
+    | ServerHandshakeInvalidKey => None // expected
     | _HandshakeNeedMore =>
-      h.fail("expected HandshakeInvalidKey for key: " + key)
+      h.fail("expected ServerHandshakeInvalidKey for key: " + key)
     | let _: _HandshakeResult =>
-      h.fail("expected HandshakeInvalidKey but got success for key: " + key)
-    | let err: HandshakeError =>
+      h.fail("expected ServerHandshakeInvalidKey but got success for key: " + key)
+    | let err: ServerHandshakeError =>
       h.fail("wrong error for key: " + key + " — " + err.string())
     end
