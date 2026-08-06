@@ -34,6 +34,9 @@ trait ref _WebSocketNode
   fun ref _send_binary(data: Array[U8] val)
     """Encode and send a binary message."""
 
+  fun ref _send_ping(payload: Array[U8] val)
+    """Encode and send a ping."""
+
   fun ref _close(code: CloseCode, reason: String val)
     """Send a close frame and await the peer's response."""
 
@@ -90,6 +93,9 @@ trait val _ConnectionState
   fun send_binary(node: _WebSocketNode ref, data: Array[U8] val)
     """Send a binary message."""
 
+  fun send_ping(node: _WebSocketNode ref, payload: Array[U8] val)
+    """Send a ping."""
+
   fun close(
     node: _WebSocketNode ref,
     code: CloseCode,
@@ -117,6 +123,7 @@ primitive _Connecting is _ConnectionState
   fun on_idle_timeout(node: _WebSocketNode ref) => None
   fun send_text(node: _WebSocketNode ref, data: String val) => None
   fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) => None
+  fun send_ping(node: _WebSocketNode ref, payload: Array[U8] val) => None
 
   fun close(
     node: _WebSocketNode ref,
@@ -141,6 +148,7 @@ primitive _Handshaking is _ConnectionState
   fun on_idle_timeout(node: _WebSocketNode ref) => None
   fun send_text(node: _WebSocketNode ref, data: String val) => None
   fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) => None
+  fun send_ping(node: _WebSocketNode ref, payload: Array[U8] val) => None
 
   fun close(
     node: _WebSocketNode ref,
@@ -177,6 +185,9 @@ primitive _Open is _ConnectionState
   fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) =>
     node._send_binary(data)
 
+  fun send_ping(node: _WebSocketNode ref, payload: Array[U8] val) =>
+    node._send_ping(payload)
+
   fun close(node: _WebSocketNode ref, code: CloseCode, reason: String val) =>
     node._close(code, reason)
 
@@ -202,6 +213,7 @@ primitive _Closing is _ConnectionState
   fun on_idle_timeout(node: _WebSocketNode ref) => None
   fun send_text(node: _WebSocketNode ref, data: String val) => None
   fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) => None
+  fun send_ping(node: _WebSocketNode ref, payload: Array[U8] val) => None
 
   fun close(
     node: _WebSocketNode ref,
@@ -221,6 +233,7 @@ primitive _Closed is _ConnectionState
   fun on_idle_timeout(node: _WebSocketNode ref) => None
   fun send_text(node: _WebSocketNode ref, data: String val) => None
   fun send_binary(node: _WebSocketNode ref, data: Array[U8] val) => None
+  fun send_ping(node: _WebSocketNode ref, payload: Array[U8] val) => None
 
   fun close(
     node: _WebSocketNode ref,

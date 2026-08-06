@@ -7,8 +7,9 @@ class \nodoc\ iso _TestIntegrationEcho is UnitTest
 
   This is the only test that covers the two directions against each other:
   the client's masking is checked by the server's parser rather than by a
-  test fixture, the handshake runs against a live peer, and the close
-  handshake completes in both directions.
+  test fixture, the handshake runs against a live peer, the server's
+  automatic pong answers a real ping, and the close handshake completes in
+  both directions.
 
   Named `integration/` so `--exclude=integration` keeps it out of the unit
   test run, since it binds a socket.
@@ -73,6 +74,7 @@ actor \nodoc\ _TestEchoClient is WebSocketClientActor
   let _listener: _TestEchoListener
   var _got_text: Bool = false
   var _got_binary: Bool = false
+  var _got_pong: Bool = false
 
   new create(
     auth: lori.TCPConnectAuth,
@@ -110,6 +112,12 @@ actor \nodoc\ _TestEchoClient is WebSocketClientActor
       _h.fail("binary payload was truncated")
     end
     _got_binary = true
+    // A ping must come back as a pong carrying the same payload.
+    _ws.send_ping(recover val [as U8: 'p'; 'i'; 'n'; 'g'] end)
+
+  fun ref on_pong(payload: Array[U8] val) =>
+    _h.assert_eq[String]("ping", String.from_array(payload))
+    _got_pong = true
     _ws.close()
 
   fun ref on_handshake_failure(err: ClientHandshakeError) =>
@@ -126,9 +134,10 @@ actor \nodoc\ _TestEchoClient is WebSocketClientActor
   =>
     _h.assert_true(_got_text, "closed before the text echo arrived")
     _h.assert_true(_got_binary, "closed before the binary echo arrived")
+    _h.assert_true(_got_pong, "closed before the pong arrived")
     _h.assert_is[CloseStatus](CloseNormal, close_status)
     _finish()
 
   fun ref _finish() =>
     _listener.dispose()
-    _h.complete(_got_text and _got_binary)
+    _h.complete(_got_text and _got_binary and _got_pong)

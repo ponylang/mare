@@ -280,3 +280,67 @@ class \nodoc\ iso _TestFrameEncoderPropertyMaskKeys is Property1[U32]
     | let err: _FrameError =>
       h.fail("Frame parser returned error")
     end
+
+class \nodoc\ iso _TestFrameEncoderPing is UnitTest
+  """Ping frame: FIN=1, opcode=0x9, unmasked for a server."""
+  fun name(): String => "frame_encoder/ping"
+
+  fun apply(h: TestHelper) ? =>
+    let payload: Array[U8] val = recover val [as U8: 0x01; 0x02] end
+    let frame = _FrameEncoder.ping(payload)
+    h.assert_eq[U8](0x89, frame(0)?)
+    h.assert_eq[U8](2, frame(1)?)
+    h.assert_eq[U8](0x01, frame(2)?)
+    h.assert_eq[U8](0x02, frame(3)?)
+    h.assert_eq[USize](4, frame.size())
+
+class \nodoc\ iso _TestFrameEncoderPingEmpty is UnitTest
+  """A keepalive ping with no payload is two bytes."""
+  fun name(): String => "frame_encoder/ping_empty"
+
+  fun apply(h: TestHelper) ? =>
+    let frame = _FrameEncoder.ping(recover val Array[U8] end)
+    h.assert_eq[U8](0x89, frame(0)?)
+    h.assert_eq[U8](0, frame(1)?)
+    h.assert_eq[USize](2, frame.size())
+
+class \nodoc\ iso _TestFrameEncoderPingMasked is UnitTest
+  """A client's ping is masked like any other frame it sends."""
+  fun name(): String => "frame_encoder/ping_masked"
+
+  fun apply(h: TestHelper) ? =>
+    let payload: Array[U8] val = recover val [as U8: 0x00; 0xFF] end
+    let frame = _FrameEncoder.ping(payload, 0xFFFFFFFF)
+    h.assert_eq[U8](0x89, frame(0)?)
+    // MASK=1, length=2
+    h.assert_eq[U8](0x82, frame(1)?)
+    // Payload XORed with 0xFF
+    h.assert_eq[U8](0xFF, frame(6)?)
+    h.assert_eq[U8](0x00, frame(7)?)
+    h.assert_eq[USize](8, frame.size())
+
+class \nodoc\ iso _TestFrameEncoderPingParsesAsControl is UnitTest
+  """
+  A masked ping is accepted by the parser as a control frame.
+
+  A control frame must have FIN set and a payload of 125 bytes or fewer, so
+  this confirms the encoder produces something the receiving side will not
+  reject outright.
+  """
+  fun name(): String => "frame_encoder/ping_parses_as_control"
+
+  fun apply(h: TestHelper) ? =>
+    let payload: Array[U8] val = recover val [as U8: 0xAB; 0xCD] end
+    let frame = _FrameEncoder.ping(payload, 0x37FA213D)
+    let parser = _FrameParser
+    match \exhaustive\ parser.parse(frame)
+    | let frames: Array[_ParsedFrame val] val =>
+      let parsed = frames(0)?
+      h.assert_true(parsed.fin)
+      h.assert_eq[U8](0x09, parsed.opcode)
+      h.assert_eq[USize](2, parsed.payload.size())
+      h.assert_eq[U8](0xAB, parsed.payload(0)?)
+      h.assert_eq[U8](0xCD, parsed.payload(1)?)
+    | let err: _FrameError =>
+      h.fail("parser rejected an encoded ping")
+    end

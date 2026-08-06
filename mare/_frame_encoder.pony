@@ -57,6 +57,20 @@ primitive _FrameEncoder
     """Encode a close frame with no payload."""
     _encode(true, 0x08, recover val Array[U8] end, mask_key)
 
+  fun ping(
+    data: Array[U8] val,
+    mask_key: (U32 | None) = None)
+    : Array[U8] val
+  =>
+    """
+    Encode a ping frame (FIN=1, opcode=0x9).
+
+    The caller is responsible for keeping `data` within the 125 byte
+    control frame limit (RFC 6455 Section 5.5); this encoder will happily
+    build a longer frame that the peer must then reject.
+    """
+    _encode(true, 0x09, data, mask_key)
+
   fun pong(
     data: Array[U8] val,
     mask_key: (U32 | None) = None)

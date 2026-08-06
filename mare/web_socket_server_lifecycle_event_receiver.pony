@@ -58,6 +58,16 @@ trait WebSocketServerLifecycleEventReceiver
     """
     None
 
+  fun ref on_pong(payload: Array[U8] val) =>
+    """
+    Called when a pong is received.
+
+    A pong carries back the payload of the ping it answers, so a client
+    that stamps its pings can measure the round trip. Pings this library
+    answers automatically do not surface here — only pongs do.
+    """
+    None
+
   fun ref on_throttled() =>
     """Called when backpressure is applied on the connection."""
     None

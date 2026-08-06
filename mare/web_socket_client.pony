@@ -111,6 +111,20 @@ class WebSocketClient is
     """Send a binary message to the server."""
     _state.send_binary(this, data)
 
+  fun ref send_ping(payload: Array[U8] val = recover val Array[U8] end) =>
+    """
+    Send a ping.
+
+    Useful as a keepalive: the peer must answer with a pong carrying the
+    same payload, so a reply confirms the connection is still live end to
+    end rather than merely still open at the TCP layer.
+
+    `payload` must be 125 bytes or fewer (RFC 6455 Section 5.5). A longer
+    payload is dropped rather than sent, since the peer would be obliged to
+    fail the connection on receiving it.
+    """
+    _state.send_ping(this, payload)
+
   fun ref close(
     code: CloseCode = CloseNormal,
     reason: String val = "")
@@ -275,8 +289,8 @@ class WebSocketClient is
       // Ping — auto-respond with pong
       _send_pong(frame.payload)
     | 0x0A =>
-      // Pong — discard
-      None
+      // Pong — the answer to a ping we sent
+      _fire_on_pong(frame.payload)
     | 0x08 =>
       // Close — echo the server's close payload (status code + reason)
       if frame.payload.size() >= 2 then
@@ -367,6 +381,17 @@ class WebSocketClient is
     | _MaskKeyUnavailable => None
     end
 
+  fun ref _send_ping(payload: Array[U8] val) =>
+    """
+    Encode and send a masked ping, dropping an over-long control payload.
+    """
+    if payload.size() <= 125 then
+      match _MaskKey()
+      | let key: U32 => _send_frame(_FrameEncoder.ping(payload, key))
+      | _MaskKeyUnavailable => None
+      end
+    end
+
   fun ref _send_pong(payload: Array[U8] val) =>
     """Encode and send a masked pong echoing a ping payload."""
     match _MaskKey()
@@ -414,6 +439,12 @@ class WebSocketClient is
     match \exhaustive\ _lifecycle_event_receiver
     | let r: WebSocketClientLifecycleEventReceiver ref =>
       r.on_binary_message(data)
+    | None => _Unreachable()
+    end
+
+  fun ref _fire_on_pong(payload: Array[U8] val) =>
+    match \exhaustive\ _lifecycle_event_receiver
+    | let r: WebSocketClientLifecycleEventReceiver ref => r.on_pong(payload)
     | None => _Unreachable()
     end
 

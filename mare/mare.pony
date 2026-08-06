@@ -186,6 +186,8 @@ Override any of these on your `WebSocketServerActor`:
 - `on_open(request)` — connection established
 - `on_text_message(data)` — complete text message received
 - `on_binary_message(data)` — complete binary message received
+- `on_pong(payload)` — a pong answering a ping you sent; incoming pings
+  are answered automatically and do not surface
 - `on_closed(close_status, close_reason)` — connection closed;
   `close_status` is a `CloseStatus` indicating why
   (e.g., `CloseNormal`, `CloseAbnormalClosure`), `close_reason` is
@@ -208,5 +210,13 @@ Call methods on your `WebSocketServer` or `WebSocketClient` instance:
 
 - `send_text(data)` — send a text message
 - `send_binary(data)` — send a binary message
+- `send_ping(payload)` — send a ping; the payload defaults to empty and
+  must be 125 bytes or fewer (RFC 6455 Section 5.5), otherwise it is
+  dropped rather than sent
 - `close(code, reason)` — initiate a close handshake
+
+Incoming pings are answered automatically on both sides, so `send_ping()`
+is only needed to initiate a keepalive of your own. The peer echoes the
+payload back through `on_pong()`, so stamping the ping lets you measure the
+round trip.
 """

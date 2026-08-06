@@ -85,6 +85,20 @@ class WebSocketServer is
     """Send a binary message to the client."""
     _state.send_binary(this, data)
 
+  fun ref send_ping(payload: Array[U8] val = recover val Array[U8] end) =>
+    """
+    Send a ping.
+
+    Useful as a keepalive: the peer must answer with a pong carrying the
+    same payload, so a reply confirms the connection is still live end to
+    end rather than merely still open at the TCP layer.
+
+    `payload` must be 125 bytes or fewer (RFC 6455 Section 5.5). A longer
+    payload is dropped rather than sent, since the peer would be obliged to
+    fail the connection on receiving it.
+    """
+    _state.send_ping(this, payload)
+
   fun ref close(
     code: CloseCode = CloseNormal,
     reason: String val = "")
@@ -242,8 +256,8 @@ class WebSocketServer is
       // Ping — auto-respond with pong
       _send_pong(frame.payload)
     | 0x0A =>
-      // Pong — discard
-      None
+      // Pong — the answer to a ping we sent
+      _fire_on_pong(frame.payload)
     | 0x08 =>
       // Close — echo the client's close payload (status code + reason)
       if frame.payload.size() >= 2 then
@@ -318,6 +332,12 @@ class WebSocketServer is
     """Encode and send a close frame with no payload."""
     _send_frame(_FrameEncoder.close_empty())
 
+  fun ref _send_ping(payload: Array[U8] val) =>
+    """Encode and send a ping, dropping an over-long control payload."""
+    if payload.size() <= 125 then
+      _send_frame(_FrameEncoder.ping(payload))
+    end
+
   fun ref _send_pong(payload: Array[U8] val) =>
     """Encode and send a pong echoing a ping payload."""
     _send_frame(_FrameEncoder.pong(payload))
@@ -371,6 +391,12 @@ class WebSocketServer is
     match \exhaustive\ _lifecycle_event_receiver
     | let r: WebSocketServerLifecycleEventReceiver ref =>
       r.on_binary_message(data)
+    | None => _Unreachable()
+    end
+
+  fun ref _fire_on_pong(payload: Array[U8] val) =>
+    match \exhaustive\ _lifecycle_event_receiver
+    | let r: WebSocketServerLifecycleEventReceiver ref => r.on_pong(payload)
     | None => _Unreachable()
     end
 
