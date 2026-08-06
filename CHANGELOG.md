@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Send TLS close_notify on graceful close ([PR #65](https://github.com/ponylang/mare/pull/65))
 
 ### Added
 
