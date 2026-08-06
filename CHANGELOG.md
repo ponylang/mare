@@ -2,19 +2,13 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.6.1] - 2026-08-06
 
 ### Fixed
 
 - Fix a number of SSL bugs ([PR #61](https://github.com/ponylang/mare/pull/61))
 - Fix additional SSL connection bugs ([PR #63](https://github.com/ponylang/mare/pull/63))
 - Fix a macOS bug where setting up a connection could close an unrelated file descriptor ([PR #63](https://github.com/ponylang/mare/pull/63))
-
-### Added
-
-
-### Changed
-
 
 ## [0.6.0] - 2026-07-30
 
