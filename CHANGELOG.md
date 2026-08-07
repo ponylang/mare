@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.6.2] - 2026-08-07
 
 ### Fixed
 
 - Send TLS close_notify on graceful close ([PR #65](https://github.com/ponylang/mare/pull/65))
-
-### Added
-
-
-### Changed
-
 
 ## [0.6.1] - 2026-08-06
 
