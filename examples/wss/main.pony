@@ -1,13 +1,3 @@
-"""
-A secure WebSocket (WSS) echo server using TLS with self-signed certificates.
-
-Demonstrates TLS support: creating an `SSLContext`, loading certificate and
-key files, and using `WebSocketServer.ssl` instead of `WebSocketServer` to
-create a secure connection.
-
-Must be run from the project root so the relative certificate paths resolve
-correctly. Test with: `websocat -k wss://localhost:8443`
-"""
 use "files"
 use ssl_net = "ssl/net"
 use lori = "lori"
@@ -34,12 +24,16 @@ actor Main
       end
 
     let auth = lori.TCPListenAuth(env.root)
-    let config = ws.WebSocketConfig(where
-      host' = "localhost",
-      port' = "8443")
+    let config =
+      ws.WebSocketConfig(where
+        host' = "localhost",
+        port' = "8443")
     WssListener(auth, config, env.out, sslctx)
 
 actor WssListener is lori.TCPListenerActor
+  """
+  Listens for TLS connections and spawns a WssHandler for each one.
+  """
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
   let _config: ws.WebSocketConfig val
@@ -70,6 +64,9 @@ actor WssListener is lori.TCPListenerActor
     _out.print("Failed to listen on " + _config.host + ":" + _config.port)
 
 actor WssHandler is ws.WebSocketServerActor
+  """
+  Handles a single TLS client connection, echoing messages back.
+  """
   var _ws: ws.WebSocketServer = ws.WebSocketServer.none()
   let _out: OutStream
 

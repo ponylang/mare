@@ -1,13 +1,3 @@
-"""
-A multi-client chat server that broadcasts messages to all connected clients.
-
-Demonstrates inter-actor communication: `ChatHandler` actors register with
-`ChatListener`, which maintains a set of connected handlers. When a client
-sends a message, its handler asks the listener to broadcast to all other
-handlers.
-
-Connect multiple clients with: `websocat ws://localhost:8083`
-"""
 use collections = "collections"
 use lori = "lori"
 use ws = "../../mare"
@@ -15,17 +5,22 @@ use ws = "../../mare"
 actor Main
   new create(env: Env) =>
     let auth = lori.TCPListenAuth(env.root)
-    let config = ws.WebSocketConfig(where
-      host' = "localhost",
-      port' = "8083")
+    let config =
+      ws.WebSocketConfig(where
+        host' = "localhost",
+        port' = "8083")
     ChatListener(auth, config, env.out)
 
 actor ChatListener is lori.TCPListenerActor
+  """
+  Listens for TCP connections and spawns a ChatHandler for each one.
+  """
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
   let _config: ws.WebSocketConfig val
   let _out: OutStream
-  let _handlers: collections.SetIs[ChatHandler tag] = collections.SetIs[ChatHandler tag]
+  let _handlers: collections.SetIs[ChatHandler tag] =
+    collections.SetIs[ChatHandler tag]
 
   new create(
     auth: lori.TCPListenAuth,
@@ -64,6 +59,9 @@ actor ChatListener is lori.TCPListenerActor
     end
 
 actor ChatHandler is ws.WebSocketServerActor
+  """
+  Handles a single chat client's WebSocket connection.
+  """
   var _ws: ws.WebSocketServer = ws.WebSocketServer.none()
   let _out: OutStream
   let _listener_tag: ChatListener tag

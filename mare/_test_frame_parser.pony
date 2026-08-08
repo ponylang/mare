@@ -25,25 +25,25 @@ primitive \nodoc\ _TestFrameHelper
         frame.push(0x80 or payload_size.u8())
       elseif payload_size <= 65535 then
         frame.push(0x80 or 126)
-        frame.>push((payload_size >> 8).u8())
+        frame .> push((payload_size >> 8).u8())
           .push((payload_size and 0xFF).u8())
       else
         frame.push(0x80 or 127)
-        frame.>push((payload_size >> 56).u8())
-          .>push(((payload_size >> 48) and 0xFF).u8())
-          .>push(((payload_size >> 40) and 0xFF).u8())
-          .>push(((payload_size >> 32) and 0xFF).u8())
-          .>push(((payload_size >> 24) and 0xFF).u8())
-          .>push(((payload_size >> 16) and 0xFF).u8())
-          .>push(((payload_size >> 8) and 0xFF).u8())
+        frame .> push((payload_size >> 56).u8())
+          .> push(((payload_size >> 48) and 0xFF).u8())
+          .> push(((payload_size >> 40) and 0xFF).u8())
+          .> push(((payload_size >> 32) and 0xFF).u8())
+          .> push(((payload_size >> 24) and 0xFF).u8())
+          .> push(((payload_size >> 16) and 0xFF).u8())
+          .> push(((payload_size >> 8) and 0xFF).u8())
           .push((payload_size and 0xFF).u8())
       end
 
       // Mask key
       try
-        frame.>push(mask_key(0)?)
-          .>push(mask_key(1)?)
-          .>push(mask_key(2)?)
+        frame .> push(mask_key(0)?)
+          .> push(mask_key(1)?)
+          .> push(mask_key(2)?)
           .push(mask_key(3)?)
 
         // Masked payload
@@ -76,17 +76,17 @@ primitive \nodoc\ _TestFrameHelper
         frame.push(payload_size.u8())
       elseif payload_size <= 65535 then
         frame.push(126)
-        frame.>push((payload_size >> 8).u8())
+        frame .> push((payload_size >> 8).u8())
           .push((payload_size and 0xFF).u8())
       else
         frame.push(127)
-        frame.>push((payload_size >> 56).u8())
-          .>push(((payload_size >> 48) and 0xFF).u8())
-          .>push(((payload_size >> 40) and 0xFF).u8())
-          .>push(((payload_size >> 32) and 0xFF).u8())
-          .>push(((payload_size >> 24) and 0xFF).u8())
-          .>push(((payload_size >> 16) and 0xFF).u8())
-          .>push(((payload_size >> 8) and 0xFF).u8())
+        frame .> push((payload_size >> 56).u8())
+          .> push(((payload_size >> 48) and 0xFF).u8())
+          .> push(((payload_size >> 40) and 0xFF).u8())
+          .> push(((payload_size >> 32) and 0xFF).u8())
+          .> push(((payload_size >> 24) and 0xFF).u8())
+          .> push(((payload_size >> 16) and 0xFF).u8())
+          .> push(((payload_size >> 8) and 0xFF).u8())
           .push((payload_size and 0xFF).u8())
       end
 
@@ -99,8 +99,8 @@ class \nodoc\ iso _TestFrameParserText is UnitTest
   fun name(): String => "frame_parser/text"
 
   fun apply(h: TestHelper) ? =>
-    let frame = _TestFrameHelper.masked_frame(
-      true, 0x01, "Hello".array())
+    let frame =
+      _TestFrameHelper.masked_frame(true, 0x01, "Hello".array())
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
@@ -151,8 +151,9 @@ class \nodoc\ iso _TestFrameParserPong is UnitTest
   fun name(): String => "frame_parser/pong"
 
   fun apply(h: TestHelper) ? =>
-    let frame = _TestFrameHelper.masked_frame(
-      true, 0x0A, recover val Array[U8] end)
+    let frame =
+      _TestFrameHelper.masked_frame(
+        true, 0x0A, recover val Array[U8] end)
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
@@ -187,8 +188,9 @@ class \nodoc\ iso _TestFrameParserCloseEmpty is UnitTest
   fun name(): String => "frame_parser/close_empty"
 
   fun apply(h: TestHelper) ? =>
-    let frame = _TestFrameHelper.masked_frame(
-      true, 0x08, recover val Array[U8] end)
+    let frame =
+      _TestFrameHelper.masked_frame(
+        true, 0x08, recover val Array[U8] end)
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
@@ -252,12 +254,13 @@ class \nodoc\ iso _TestFrameParserLength16Bit is UnitTest
   fun name(): String => "frame_parser/length_16bit"
 
   fun apply(h: TestHelper) ? =>
-    let payload: Array[U8] val = recover val
-      let a = Array[U8](200)
-      var i: USize = 0
-      while i < 200 do a.push(0x41); i = i + 1 end
-      a
-    end
+    let payload: Array[U8] val =
+      recover val
+        let a = Array[U8](200)
+        var i: USize = 0
+        while i < 200 do a.push(0x41); i = i + 1 end
+        a
+      end
     let frame = _TestFrameHelper.masked_frame(true, 0x02, payload)
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
@@ -273,12 +276,13 @@ class \nodoc\ iso _TestFrameParserLength64Bit is UnitTest
 
   fun apply(h: TestHelper) ? =>
     let size: USize = 65536
-    let payload: Array[U8] val = recover val
-      let a = Array[U8](size)
-      var i: USize = 0
-      while i < size do a.push(0x42); i = i + 1 end
-      a
-    end
+    let payload: Array[U8] val =
+      recover val
+        let a = Array[U8](size)
+        var i: USize = 0
+        while i < size do a.push(0x42); i = i + 1 end
+        a
+      end
     let frame = _TestFrameHelper.masked_frame(true, 0x02, payload)
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
@@ -297,17 +301,18 @@ class \nodoc\ iso _TestFrameParserLength64BitMsbSet is UnitTest
     // The 8-byte extended length is [0x80 0x00 0x00 0x00 0x00 0x01 0x00 0x00],
     // which has bit 63 set. This must be rejected before attempting to read
     // that many payload bytes.
-    let raw: Array[U8] val = recover val
-      let f = Array[U8]
-      f.push(0x80 or 0x02) // FIN + binary
-      f.push(0x80 or 127)  // MASK + 64-bit length indicator
-      // 8-byte extended length with MSB set
-      f.>push(0x80).>push(0x00).>push(0x00).>push(0x00)
-        .>push(0x00).>push(0x01).>push(0x00).push(0x00)
-      // Mask key
-      f.>push(0x00).>push(0x00).>push(0x00).push(0x00)
-      f
-    end
+    let raw: Array[U8] val =
+      recover val
+        let f = Array[U8]
+        f.push(0x80 or 0x02) // FIN + binary
+        f.push(0x80 or 127)  // MASK + 64-bit length indicator
+        // 8-byte extended length with MSB set
+        f .> push(0x80) .> push(0x00) .> push(0x00) .> push(0x00)
+          .> push(0x00) .> push(0x01) .> push(0x00) .> push(0x00)
+        // Mask key
+          .> push(0x00) .> push(0x00) .> push(0x00) .> push(0x00)
+        f
+      end
     let parser = _FrameParser
     match \exhaustive\ parser.parse(raw)
     | let frames: Array[_ParsedFrame val] val =>
@@ -321,8 +326,9 @@ class \nodoc\ iso _TestFrameParserUnmasked is UnitTest
   fun name(): String => "frame_parser/unmasked_rejected"
 
   fun apply(h: TestHelper) =>
-    let frame = _TestFrameHelper.unmasked_frame(
-      true, 0x01, "Hello".array())
+    let frame =
+      _TestFrameHelper.unmasked_frame(
+        true, 0x01, "Hello".array())
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
@@ -337,13 +343,15 @@ class \nodoc\ iso _TestFrameParserNonZeroRsv is UnitTest
 
   fun apply(h: TestHelper) =>
     // Build frame with RSV1 set (0x40)
-    let raw = recover val
-      let f = Array[U8]
-      f.push(0x80 or 0x40 or 0x01) // FIN + RSV1 + text
-      f.push(0x80 or 0x00) // MASK + 0 length
-      f.>push(0x00).>push(0x00).>push(0x00).push(0x00) // mask key
-      f
-    end
+    let raw =
+      recover val
+        let f = Array[U8]
+        f.push(0x80 or 0x40 or 0x01) // FIN + RSV1 + text
+        f.push(0x80 or 0x00) // MASK + 0 length
+        // mask key
+        f .> push(0x00) .> push(0x00) .> push(0x00) .> push(0x00)
+        f
+      end
     let parser = _FrameParser
     match \exhaustive\ parser.parse(raw)
     | let frames: Array[_ParsedFrame val] val =>
@@ -357,8 +365,9 @@ class \nodoc\ iso _TestFrameParserFragmentedControl is UnitTest
   fun name(): String => "frame_parser/fragmented_control"
 
   fun apply(h: TestHelper) =>
-    let frame = _TestFrameHelper.masked_frame(
-      false, 0x09, recover val Array[U8] end)
+    let frame =
+      _TestFrameHelper.masked_frame(
+        false, 0x09, recover val Array[U8] end)
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
@@ -372,12 +381,13 @@ class \nodoc\ iso _TestFrameParserControlTooLarge is UnitTest
   fun name(): String => "frame_parser/control_too_large"
 
   fun apply(h: TestHelper) =>
-    let payload: Array[U8] val = recover val
-      let a = Array[U8](126)
-      var i: USize = 0
-      while i < 126 do a.push(0x00); i = i + 1 end
-      a
-    end
+    let payload: Array[U8] val =
+      recover val
+        let a = Array[U8](126)
+        var i: USize = 0
+        while i < 126 do a.push(0x00); i = i + 1 end
+        a
+      end
     let frame = _TestFrameHelper.masked_frame(true, 0x09, payload)
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
@@ -392,8 +402,9 @@ class \nodoc\ iso _TestFrameParserUnknownOpcode is UnitTest
   fun name(): String => "frame_parser/unknown_opcode"
 
   fun apply(h: TestHelper) =>
-    let frame = _TestFrameHelper.masked_frame(
-      true, 0x03, recover val Array[U8] end)
+    let frame =
+      _TestFrameHelper.masked_frame(
+        true, 0x03, recover val Array[U8] end)
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)
     | let frames: Array[_ParsedFrame val] val =>
@@ -407,8 +418,8 @@ class \nodoc\ iso _TestFrameParserIncremental is UnitTest
   fun name(): String => "frame_parser/incremental"
 
   fun apply(h: TestHelper) ? =>
-    let full_frame = _TestFrameHelper.masked_frame(
-      true, 0x01, "Hi".array())
+    let full_frame =
+      _TestFrameHelper.masked_frame(true, 0x01, "Hi".array())
     let parser = _FrameParser
 
     // Feed one byte at a time
@@ -440,18 +451,20 @@ class \nodoc\ iso _TestFrameParserMultipleFrames is UnitTest
   fun name(): String => "frame_parser/multiple_frames"
 
   fun apply(h: TestHelper) ? =>
-    let frame1 = _TestFrameHelper.masked_frame(
-      true, 0x01, "Hi".array())
-    let frame2 = _TestFrameHelper.masked_frame(
-      true, 0x02, recover val [as U8: 0x01] end)
+    let frame1 =
+      _TestFrameHelper.masked_frame(true, 0x01, "Hi".array())
+    let frame2 =
+      _TestFrameHelper.masked_frame(
+        true, 0x02, recover val [as U8: 0x01] end)
 
     // Concatenate both frames
-    let combined: Array[U8] val = recover val
-      let c = Array[U8](frame1.size() + frame2.size())
-      for b in frame1.values() do c.push(b) end
-      for b in frame2.values() do c.push(b) end
-      c
-    end
+    let combined: Array[U8] val =
+      recover val
+        let c = Array[U8](frame1.size() + frame2.size())
+        for b in frame1.values() do c.push(b) end
+        for b in frame2.values() do c.push(b) end
+        c
+      end
 
     let parser = _FrameParser
     match \exhaustive\ parser.parse(combined)
@@ -467,12 +480,12 @@ class \nodoc\ iso _TestFrameParserCloseValidCodes is Property1[U16]
   fun name(): String => "frame_parser/close_valid_codes"
 
   fun gen(): Generator[U16] =>
-    Generators.frequency[U16]([
-      as WeightedGenerator[U16]:
-      (1, Generators.u16(where min = 1000, max = 1003))
-      (1, Generators.u16(where min = 1007, max = 1014))
-      (1, Generators.u16(where min = 3000, max = 4999))
-    ])
+    Generators.frequency[U16](
+      [ as WeightedGenerator[U16]:
+        (1, Generators.u16(where min = 1000, max = 1003))
+        (1, Generators.u16(where min = 1007, max = 1014))
+        (1, Generators.u16(where min = 3000, max = 4999))
+      ])
 
   fun property(code: U16, h: PropertyHelper) ? =>
     let payload: Array[U8] val =
@@ -494,13 +507,13 @@ class \nodoc\ iso _TestFrameParserCloseInvalidCodes is Property1[U16]
   fun name(): String => "frame_parser/close_invalid_codes"
 
   fun gen(): Generator[U16] =>
-    Generators.frequency[U16]([
-      as WeightedGenerator[U16]:
-      (1, Generators.u16(where min = 0, max = 999))
-      (1, Generators.u16(where min = 1004, max = 1006))
-      (1, Generators.u16(where min = 1015, max = 2999))
-      (1, Generators.u16(where min = 5000, max = 65535))
-    ])
+    Generators.frequency[U16](
+      [ as WeightedGenerator[U16]:
+        (1, Generators.u16(where min = 0, max = 999))
+        (1, Generators.u16(where min = 1004, max = 1006))
+        (1, Generators.u16(where min = 1015, max = 2999))
+        (1, Generators.u16(where min = 5000, max = 65535))
+      ])
 
   fun property(code: U16, h: PropertyHelper) =>
     let payload: Array[U8] val =
@@ -519,18 +532,18 @@ class \nodoc\ iso _TestFrameParserCloseMixedCodes is Property1[U16]
   fun name(): String => "frame_parser/close_mixed_codes"
 
   fun gen(): Generator[U16] =>
-    Generators.frequency[U16]([
-      as WeightedGenerator[U16]:
-      // Valid ranges
-      (1, Generators.u16(where min = 1000, max = 1003))
-      (1, Generators.u16(where min = 1007, max = 1014))
-      (1, Generators.u16(where min = 3000, max = 4999))
-      // Invalid ranges
-      (1, Generators.u16(where min = 0, max = 999))
-      (1, Generators.u16(where min = 1004, max = 1006))
-      (1, Generators.u16(where min = 1015, max = 2999))
-      (1, Generators.u16(where min = 5000, max = 65535))
-    ])
+    Generators.frequency[U16](
+      [ as WeightedGenerator[U16]:
+        // Valid ranges
+        (1, Generators.u16(where min = 1000, max = 1003))
+        (1, Generators.u16(where min = 1007, max = 1014))
+        (1, Generators.u16(where min = 3000, max = 4999))
+        // Invalid ranges
+        (1, Generators.u16(where min = 0, max = 999))
+        (1, Generators.u16(where min = 1004, max = 1006))
+        (1, Generators.u16(where min = 1015, max = 2999))
+        (1, Generators.u16(where min = 5000, max = 65535))
+      ])
 
   fun property(code: U16, h: PropertyHelper) =>
     let valid =
@@ -558,12 +571,13 @@ class \nodoc\ iso _TestFrameParserPropertyRandom is Property1[USize]
     Generators.usize(where min = 0, max = 200)
 
   fun property(payload_size: USize, h: PropertyHelper) ? =>
-    let payload: Array[U8] val = recover val
-      let a = Array[U8](payload_size)
-      var i: USize = 0
-      while i < payload_size do a.push((i % 256).u8()); i = i + 1 end
-      a
-    end
+    let payload: Array[U8] val =
+      recover val
+        let a = Array[U8](payload_size)
+        var i: USize = 0
+        while i < payload_size do a.push((i % 256).u8()); i = i + 1 end
+        a
+      end
     let frame = _TestFrameHelper.masked_frame(true, 0x02, payload)
     let parser = _FrameParser
     match \exhaustive\ parser.parse(frame)

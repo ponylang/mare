@@ -26,17 +26,18 @@ primitive _CloseStatusExtractor
       let code = (payload(0)?.u16() << 8) or payload(1)?.u16()
       let status = _code_to_status(code)
 
-      let reason = if payload.size() > 2 then
-        let s = String(payload.size() - 2)
-        var i: USize = 2
-        while i < payload.size() do
-          s.push(payload(i)?)
-          i = i + 1
+      let reason =
+        if payload.size() > 2 then
+          let s = String(payload.size() - 2)
+          var i: USize = 2
+          while i < payload.size() do
+            s.push(payload(i)?)
+            i = i + 1
+          end
+          s.clone()
+        else
+          ""
         end
-        s.clone()
-      else
-        ""
-      end
 
       (status, consume reason)
     else

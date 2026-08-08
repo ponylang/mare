@@ -96,12 +96,13 @@ class \nodoc\ iso _TestReassemblerMaxSize is UnitTest
 
   fun apply(h: TestHelper) =>
     let reassembler = _FragmentReassembler
-    let payload: Array[U8] val = recover val
-      let a = Array[U8](100)
-      var i: USize = 0
-      while i < 100 do a.push(0x41); i = i + 1 end
-      a
-    end
+    let payload: Array[U8] val =
+      recover val
+        let a = Array[U8](100)
+        var i: USize = 0
+        while i < 100 do a.push(0x41); i = i + 1 end
+        a
+      end
     match \exhaustive\ reassembler.frame(true, 0x02, payload, 50) // max=50
     | let err: _ReassemblyError =>
       h.assert_is[CloseCode](CloseMessageTooBig, err.code)
@@ -163,38 +164,42 @@ class \nodoc\ iso _TestReassemblerPropertyRoundtrip is Property1[USize]
 
   fun property(total_size: USize, h: PropertyHelper) ? =>
     // Build a payload
-    let full_payload = recover val
-      let a = Array[U8](total_size)
-      var i: USize = 0
-      while i < total_size do
-        a.push((i % 256).u8())
-        i = i + 1
+    let full_payload =
+      recover val
+        let a = Array[U8](total_size)
+        var i: USize = 0
+        while i < total_size do
+          a.push((i % 256).u8())
+          i = i + 1
+        end
+        a
       end
-      a
-    end
 
     // Split into 3 fragments
     let split1 = total_size / 3
     let split2 = (total_size * 2) / 3
 
-    let frag1 = recover val
-      let a = Array[U8](split1)
-      var i: USize = 0
-      while i < split1 do a.push(full_payload(i)?); i = i + 1 end
-      a
-    end
-    let frag2 = recover val
-      let a = Array[U8](split2 - split1)
-      var i: USize = split1
-      while i < split2 do a.push(full_payload(i)?); i = i + 1 end
-      a
-    end
-    let frag3 = recover val
-      let a = Array[U8](total_size - split2)
-      var i: USize = split2
-      while i < total_size do a.push(full_payload(i)?); i = i + 1 end
-      a
-    end
+    let frag1 =
+      recover val
+        let a = Array[U8](split1)
+        var i: USize = 0
+        while i < split1 do a.push(full_payload(i)?); i = i + 1 end
+        a
+      end
+    let frag2 =
+      recover val
+        let a = Array[U8](split2 - split1)
+        var i: USize = split1
+        while i < split2 do a.push(full_payload(i)?); i = i + 1 end
+        a
+      end
+    let frag3 =
+      recover val
+        let a = Array[U8](total_size - split2)
+        var i: USize = split2
+        while i < total_size do a.push(full_payload(i)?); i = i + 1 end
+        a
+      end
 
     let reassembler = _FragmentReassembler
     match \exhaustive\ reassembler.frame(false, 0x02, frag1, total_size + 1)

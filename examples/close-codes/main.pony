@@ -1,26 +1,19 @@
-"""
-A WebSocket server that demonstrates server-initiated close and close
-status handling.
-
-Send "goodbye" to trigger a normal close (1000), "kick" to trigger a
-policy violation close (1008), or any other message to echo it back.
-The `on_closed` callback matches on `CloseStatus` variants to log how
-the connection closed.
-
-Connect with: `websocat ws://localhost:8082`
-"""
 use lori = "lori"
 use ws = "../../mare"
 
 actor Main
   new create(env: Env) =>
     let auth = lori.TCPListenAuth(env.root)
-    let config = ws.WebSocketConfig(where
-      host' = "localhost",
-      port' = "8082")
+    let config =
+      ws.WebSocketConfig(where
+        host' = "localhost",
+        port' = "8082")
     CloseListener(auth, config, env.out)
 
 actor CloseListener is lori.TCPListenerActor
+  """
+  Listens for TCP connections and spawns a CloseHandler for each one.
+  """
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
   let _config: ws.WebSocketConfig val
@@ -48,6 +41,9 @@ actor CloseListener is lori.TCPListenerActor
     _out.print("Failed to listen on " + _config.host + ":" + _config.port)
 
 actor CloseHandler is ws.WebSocketServerActor
+  """
+  Handles a single client connection, demonstrating close status codes.
+  """
   var _ws: ws.WebSocketServer = ws.WebSocketServer.none()
   let _out: OutStream
 

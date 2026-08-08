@@ -61,20 +61,21 @@ class \nodoc\ _TestExtractorAllNamedCodes is UnitTest
     _check(h, 1011, CloseInternalError)
 
   fun _check(h: TestHelper, code: U16, expected: CloseStatus) =>
-    let payload: Array[U8] val = recover val
-      [as U8: (code >> 8).u8(); code.u8()]
-    end
+    let payload: Array[U8] val =
+      recover val
+        [as U8: (code >> 8).u8(); code.u8()]
+      end
     (let status, _) = _CloseStatusExtractor.from_payload(payload)
     h.assert_is[CloseStatus](expected, status)
 
 // -- Example-based tests for new types --
-
 class \nodoc\ _TestCloseNoStatusReceivedType is UnitTest
   fun name(): String => "CloseNoStatusReceived/code and string"
 
   fun apply(h: TestHelper) =>
     h.assert_eq[U16](1005, CloseNoStatusReceived.code())
-    h.assert_eq[String val]("1005 No Status Received",
+    h.assert_eq[String val](
+      "1005 No Status Received",
       CloseNoStatusReceived.string())
 
 class \nodoc\ _TestCloseAbnormalClosureType is UnitTest
@@ -82,7 +83,8 @@ class \nodoc\ _TestCloseAbnormalClosureType is UnitTest
 
   fun apply(h: TestHelper) =>
     h.assert_eq[U16](1006, CloseAbnormalClosure.code())
-    h.assert_eq[String val]("1006 Abnormal Closure",
+    h.assert_eq[String val](
+      "1006 Abnormal Closure",
       CloseAbnormalClosure.string())
 
 class \nodoc\ _TestOtherCloseCodeType is UnitTest
@@ -94,20 +96,22 @@ class \nodoc\ _TestOtherCloseCodeType is UnitTest
     h.assert_eq[String val]("3500 Other", c.string())
 
 // -- Property-based tests --
-
 class \nodoc\ _TestExtractorPropertyNamedCodes is Property1[U16]
   """All named code values produce their respective primitive."""
 
   fun name(): String => "CloseStatusExtractor/property: named codes"
 
   fun gen(): Generator[U16] =>
-    Generators.one_of[U16]([as U16: 1000; 1001; 1002; 1003
-      1007; 1008; 1009; 1011])
+    Generators.one_of[U16](
+      [ as U16: 1000; 1001; 1002; 1003
+        1007; 1008; 1009; 1011
+      ])
 
   fun property(sample: U16, h: PropertyHelper) =>
-    let payload: Array[U8] val = recover val
-      [as U8: (sample >> 8).u8(); sample.u8()]
-    end
+    let payload: Array[U8] val =
+      recover val
+        [as U8: (sample >> 8).u8(); sample.u8()]
+      end
     (let status, _) = _CloseStatusExtractor.from_payload(payload)
     match status
     | let _: OtherCloseCode =>
@@ -133,15 +137,17 @@ class \nodoc\ _TestExtractorPropertyOtherCodes is Property1[U16]
   fun gen(): Generator[U16] =>
     // Valid codes that don't have named primitives:
     // 1010, 1012-1014, 3000-4999
-    Generators.frequency[U16]([as (USize, Generator[U16]):
-      (1, Generators.one_of[U16]([as U16: 1010; 1012; 1013; 1014]))
-      (4, Generators.u16(3000, 4999))
-    ])
+    Generators.frequency[U16](
+      [ as (USize, Generator[U16]):
+        (1, Generators.one_of[U16]([as U16: 1010; 1012; 1013; 1014]))
+        (4, Generators.u16(3000, 4999))
+      ])
 
   fun property(sample: U16, h: PropertyHelper) =>
-    let payload: Array[U8] val = recover val
-      [as U8: (sample >> 8).u8(); sample.u8()]
-    end
+    let payload: Array[U8] val =
+      recover val
+        [as U8: (sample >> 8).u8(); sample.u8()]
+      end
     (let status, _) = _CloseStatusExtractor.from_payload(payload)
     match status
     | let o: OtherCloseCode =>
@@ -158,19 +164,22 @@ class \nodoc\ _TestExtractorPropertyRoundtrip is Property1[U16]
 
   fun gen(): Generator[U16] =>
     // All valid receivable codes: 1000-1003, 1007-1014, 3000-4999
-    Generators.frequency[U16]([as (USize, Generator[U16]):
-      (1, Generators.u16(1000, 1003))
-      (1, Generators.u16(1007, 1014))
-      (4, Generators.u16(3000, 4999))
-    ])
+    Generators.frequency[U16](
+      [ as (USize, Generator[U16]):
+        (1, Generators.u16(1000, 1003))
+        (1, Generators.u16(1007, 1014))
+        (4, Generators.u16(3000, 4999))
+      ])
 
   fun property(sample: U16, h: PropertyHelper) =>
-    let payload: Array[U8] val = recover val
-      [as U8: (sample >> 8).u8(); sample.u8()]
-    end
+    let payload: Array[U8] val =
+      recover val
+        [as U8: (sample >> 8).u8(); sample.u8()]
+      end
     (let status, _) = _CloseStatusExtractor.from_payload(payload)
     // Verify the extracted code matches the input regardless of type
-    let extracted_code = match \exhaustive\ status
+    let extracted_code =
+      match \exhaustive\ status
       | let s: CloseNormal => s.code()
       | let s: CloseGoingAway => s.code()
       | let s: CloseProtocolError => s.code()

@@ -30,8 +30,12 @@ trait tag WebSocketServerActor is
   """
 
   fun ref _websocket(): WebSocketServer
-    """Return the protocol instance owned by this actor."""
+    """
+    Return the protocol instance owned by this actor.
+    """
 
   fun ref _connection(): lori.TCPConnection =>
-    """Delegates to the protocol's TCP connection."""
+    """
+    Delegates to the protocol's TCP connection.
+    """
     _websocket()._connection()

@@ -12,37 +12,57 @@ trait val _ConnectionState
   """
 
   fun on_received(server: WebSocketServer ref, data: Array[U8] iso)
-    """Handle incoming data from the TCP connection."""
+    """
+    Handle incoming data from the TCP connection.
+    """
 
   fun on_closed(server: WebSocketServer ref)
-    """Handle connection close notification."""
+    """
+    Handle connection close notification.
+    """
 
   fun on_throttled(server: WebSocketServer ref)
-    """Handle backpressure applied notification."""
+    """
+    Handle backpressure applied notification.
+    """
 
   fun on_unthrottled(server: WebSocketServer ref)
-    """Handle backpressure released notification."""
+    """
+    Handle backpressure released notification.
+    """
 
   fun on_sent(server: WebSocketServer ref, token: lori.SendToken)
-    """Handle send completion notification from lori."""
+    """
+    Handle send completion notification from lori.
+    """
 
   fun on_idle_timeout(server: WebSocketServer ref)
-    """Handle connection going idle."""
+    """
+    Handle connection going idle.
+    """
 
   fun send_text(server: WebSocketServer ref, data: String val)
-    """Send a text message."""
+    """
+    Send a text message.
+    """
 
   fun send_binary(server: WebSocketServer ref, data: Array[U8] val)
-    """Send a binary message."""
+    """
+    Send a binary message.
+    """
 
   fun close(
     server: WebSocketServer ref,
     code: CloseCode,
     reason: String val)
-    """Initiate a close handshake."""
+    """
+    Initiate a close handshake.
+    """
 
 primitive _Handshaking is _ConnectionState
-  """Parsing the HTTP upgrade request. No WebSocket messages yet."""
+  """
+  Parsing the HTTP upgrade request. No WebSocket messages yet.
+  """
 
   fun on_received(server: WebSocketServer ref, data: Array[U8] iso) =>
     server._feed_handshake(consume data)
@@ -56,7 +76,12 @@ primitive _Handshaking is _ConnectionState
   fun on_sent(server: WebSocketServer ref, token: lori.SendToken) => None
   fun on_idle_timeout(server: WebSocketServer ref) => None
   fun send_text(server: WebSocketServer ref, data: String val) => None
-  fun send_binary(server: WebSocketServer ref, data: Array[U8] val) => None
+
+  fun send_binary(
+    server: WebSocketServer ref,
+    data: Array[U8] val)
+  =>
+    None
 
   fun close(
     server: WebSocketServer ref,
@@ -66,7 +91,9 @@ primitive _Handshaking is _ConnectionState
     None
 
 primitive _Open is _ConnectionState
-  """WebSocket connection is open — exchanging messages."""
+  """
+  WebSocket connection is open — exchanging messages.
+  """
 
   fun on_received(server: WebSocketServer ref, data: Array[U8] iso) =>
     server._feed_frames(consume data)
@@ -122,7 +149,12 @@ primitive _Closing is _ConnectionState
   fun on_sent(server: WebSocketServer ref, token: lori.SendToken) => None
   fun on_idle_timeout(server: WebSocketServer ref) => None
   fun send_text(server: WebSocketServer ref, data: String val) => None
-  fun send_binary(server: WebSocketServer ref, data: Array[U8] val) => None
+
+  fun send_binary(
+    server: WebSocketServer ref,
+    data: Array[U8] val)
+  =>
+    None
 
   fun close(
     server: WebSocketServer ref,
@@ -132,7 +164,9 @@ primitive _Closing is _ConnectionState
     None
 
 primitive _Closed is _ConnectionState
-  """Connection is closed — all operations are no-ops."""
+  """
+  Connection is closed — all operations are no-ops.
+  """
 
   fun on_received(server: WebSocketServer ref, data: Array[U8] iso) => None
   fun on_closed(server: WebSocketServer ref) => None
@@ -141,7 +175,12 @@ primitive _Closed is _ConnectionState
   fun on_sent(server: WebSocketServer ref, token: lori.SendToken) => None
   fun on_idle_timeout(server: WebSocketServer ref) => None
   fun send_text(server: WebSocketServer ref, data: String val) => None
-  fun send_binary(server: WebSocketServer ref, data: Array[U8] val) => None
+
+  fun send_binary(
+    server: WebSocketServer ref,
+    data: Array[U8] val)
+  =>
+    None
 
   fun close(
     server: WebSocketServer ref,

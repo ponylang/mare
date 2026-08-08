@@ -23,7 +23,9 @@ class val WebSocketConfig
     max_message_size': USize = 1_048_576,
     max_handshake_size': USize = 8192)
   =>
-    """Create WebSocket configuration with optional overrides."""
+    """
+    Create WebSocket configuration with optional overrides.
+    """
     host = host'
     port = port'
     max_message_size = max_message_size'

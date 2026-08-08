@@ -1,21 +1,19 @@
-"""
-A WebSocket echo server that echoes back text and binary messages.
-
-Connect with any WebSocket client (e.g., websocat, browser JS) to
-ws://localhost:8080 and messages will be echoed back.
-"""
 use lori = "lori"
 use ws = "../../mare"
 
 actor Main
   new create(env: Env) =>
     let auth = lori.TCPListenAuth(env.root)
-    let config = ws.WebSocketConfig(where
-      host' = "localhost",
-      port' = "8080")
+    let config =
+      ws.WebSocketConfig(where
+        host' = "localhost",
+        port' = "8080")
     EchoListener(auth, config, env.out)
 
 actor EchoListener is lori.TCPListenerActor
+  """
+  Listens for TCP connections and spawns an EchoHandler for each one.
+  """
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
   let _config: ws.WebSocketConfig val
@@ -43,6 +41,9 @@ actor EchoListener is lori.TCPListenerActor
     _out.print("Failed to listen on " + _config.host + ":" + _config.port)
 
 actor EchoHandler is ws.WebSocketServerActor
+  """
+  Handles a single client connection, echoing messages back.
+  """
   var _ws: ws.WebSocketServer = ws.WebSocketServer.none()
   let _out: OutStream
 

@@ -34,7 +34,9 @@ class _FrameParser
     consume frames
 
   fun ref _try_parse_frame(): (_ParsedFrame val | _FrameError | None) =>
-    """Attempt to parse a single frame from the buffer."""
+    """
+    Attempt to parse a single frame from the buffer.
+    """
     if _buf.size() < 2 then return None end
 
     try
@@ -151,7 +153,8 @@ class _FrameParser
             reason_s.push(payload(ri)?)
             ri = ri + 1
           end
-          let reason_bytes: Array[U8] val = reason_s.clone().iso_array()
+          let reason_bytes: Array[U8] val =
+            reason_s.clone().iso_array()
           if not _Utf8Validator.is_valid(reason_bytes) then
             return _FrameError(CloseProtocolError)
           end
@@ -174,7 +177,9 @@ class _FrameParser
     end
 
   fun _valid_opcode(opcode: U8): Bool =>
-    """Check if the opcode is a known WebSocket opcode."""
+    """
+    Check if the opcode is a known WebSocket opcode.
+    """
     match opcode
     | 0x00 => true // Continuation
     | 0x01 => true // Text
@@ -186,7 +191,9 @@ class _FrameParser
     end
 
   fun _valid_close_code(code: U16): Bool =>
-    """Check if a close status code is valid to receive per RFC 6455."""
+    """
+    Check if a close status code is valid to receive per RFC 6455.
+    """
     // Coupling: _CloseStatusExtractor._code_to_status must stay in sync with
     // these valid code ranges. Adding new ranges here means adding
     // corresponding match arms in the extractor.
@@ -197,7 +204,9 @@ class _FrameParser
     end
 
 class val _ParsedFrame
-  """A parsed and unmasked WebSocket frame."""
+  """
+  A parsed and unmasked WebSocket frame.
+  """
   let fin: Bool
   let opcode: U8
   let payload: Array[U8] val
@@ -208,7 +217,9 @@ class val _ParsedFrame
     payload = payload'
 
 class val _FrameError
-  """A protocol violation detected during frame parsing."""
+  """
+  A protocol violation detected during frame parsing.
+  """
   let code: CloseCode
 
   new val create(code': CloseCode) =>

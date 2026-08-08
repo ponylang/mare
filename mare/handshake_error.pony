@@ -10,21 +10,36 @@ type HandshakeError is
   | HandshakeAcceptKeyFailed )
 
 primitive HandshakeRequestTooLarge is Stringable
-  """The HTTP upgrade request exceeded the maximum allowed size."""
+  """
+  The HTTP upgrade request exceeded the maximum allowed size.
+  """
+
   fun string(): String iso^ =>
-    """Returns a human-readable description of this error."""
+    """
+    Returns a human-readable description of this error.
+    """
     "Handshake request too large".clone()
 
 primitive HandshakeInvalidHTTP is Stringable
-  """The HTTP request line was malformed or not a GET request."""
+  """
+  The HTTP request line was malformed or not a GET request.
+  """
+
   fun string(): String iso^ =>
-    """Returns a human-readable description of this error."""
+    """
+    Returns a human-readable description of this error.
+    """
     "Invalid HTTP request".clone()
 
 primitive HandshakeMissingHost is Stringable
-  """The required Host header was missing."""
+  """
+  The required Host header was missing.
+  """
+
   fun string(): String iso^ =>
-    """Returns a human-readable description of this error."""
+    """
+    Returns a human-readable description of this error.
+    """
     "Missing Host header".clone()
 
 primitive HandshakeMissingUpgrade is Stringable
@@ -32,20 +47,33 @@ primitive HandshakeMissingUpgrade is Stringable
   The required Upgrade and Connection headers were missing or had
   incorrect values.
   """
+
   fun string(): String iso^ =>
-    """Returns a human-readable description of this error."""
+    """
+    Returns a human-readable description of this error.
+    """
     "Missing or invalid Upgrade/Connection headers".clone()
 
 primitive HandshakeWrongVersion is Stringable
-  """The Sec-WebSocket-Version header was not 13."""
+  """
+  The Sec-WebSocket-Version header was not 13.
+  """
+
   fun string(): String iso^ =>
-    """Returns a human-readable description of this error."""
+    """
+    Returns a human-readable description of this error.
+    """
     "Wrong WebSocket version (expected 13)".clone()
 
 primitive HandshakeMissingKey is Stringable
-  """The Sec-WebSocket-Key header was missing."""
+  """
+  The Sec-WebSocket-Key header was missing.
+  """
+
   fun string(): String iso^ =>
-    """Returns a human-readable description of this error."""
+    """
+    Returns a human-readable description of this error.
+    """
     "Missing Sec-WebSocket-Key header".clone()
 
 primitive HandshakeInvalidKey is Stringable
@@ -53,8 +81,11 @@ primitive HandshakeInvalidKey is Stringable
   The Sec-WebSocket-Key header was not a valid base64-encoded
   16-byte value.
   """
+
   fun string(): String iso^ =>
-    """Returns a human-readable description of this error."""
+    """
+    Returns a human-readable description of this error.
+    """
     "Invalid Sec-WebSocket-Key (must be base64-encoded 16 bytes)".clone()
 
 primitive HandshakeAcceptKeyFailed is Stringable
@@ -65,6 +96,9 @@ primitive HandshakeAcceptKeyFailed is Stringable
   could not be taken. A server that reports this answers 500 rather than
   400, because nothing about the client's request was wrong.
   """
+
   fun string(): String iso^ =>
-    """Returns a human-readable description of this error."""
+    """
+    Returns a human-readable description of this error.
+    """
     "Could not compute Sec-WebSocket-Accept".clone()
