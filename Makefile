@@ -24,7 +24,7 @@ else
 	PONYC = $(COMPILE_WITH) --debug
 endif
 
-ifeq (,$(filter $(MAKECMDGOALS),clean docs TAGS))
+ifeq (,$(filter $(MAKECMDGOALS),clean docs lint TAGS))
   ifeq ($(ssl), 4.0.x)
           SSL = -Dopenssl_4.0.x
   else ifeq ($(ssl), 3.0.x)
