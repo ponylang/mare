@@ -79,15 +79,16 @@ class \nodoc\ iso _TestFrameEncoderLength16Bit is UnitTest
 
   fun apply(h: TestHelper) ? =>
     // Create 200-byte payload
-    let payload: Array[U8] val = recover val
-      let a = Array[U8](200)
-      var i: USize = 0
-      while i < 200 do
-        a.push(0x41)
-        i = i + 1
+    let payload: Array[U8] val =
+      recover val
+        let a = Array[U8](200)
+        var i: USize = 0
+        while i < 200 do
+          a.push(0x41)
+          i = i + 1
+        end
+        a
       end
-      a
-    end
     let frame = _FrameEncoder.binary(payload)
     h.assert_eq[U8](0x82, frame(0)?)
     // Length indicator: 126
@@ -105,15 +106,16 @@ class \nodoc\ iso _TestFrameEncoderLength64Bit is UnitTest
   fun apply(h: TestHelper) ? =>
     // Create 65536-byte payload
     let size: USize = 65536
-    let payload: Array[U8] val = recover val
-      let a = Array[U8](size)
-      var i: USize = 0
-      while i < size do
-        a.push(0x42)
-        i = i + 1
+    let payload: Array[U8] val =
+      recover val
+        let a = Array[U8](size)
+        var i: USize = 0
+        while i < size do
+          a.push(0x42)
+          i = i + 1
+        end
+        a
       end
-      a
-    end
     let frame = _FrameEncoder.binary(payload)
     h.assert_eq[U8](0x82, frame(0)?)
     // Length indicator: 127
@@ -199,29 +201,30 @@ class \nodoc\ iso _TestFrameEncoderPropertyRoundtrip is Property1[USize]
     let payload_size = frame.size() - payload_offset
 
     // Build masked frame
-    let result = recover iso
-      let r = Array[U8](header_size + 4 + payload_size)
-      // Copy first byte unchanged
-      r.push(b0)
-      // Set MASK bit on second byte
-      r.push(b1 or 0x80)
-      // Copy extended length bytes if any
-      var i: USize = 2
-      while i < header_size do
-        r.push(frame(i)?)
-        i = i + 1
+    let result =
+      recover iso
+        let r = Array[U8](header_size + 4 + payload_size)
+        // Copy first byte unchanged
+        r.push(b0)
+        // Set MASK bit on second byte
+        r.push(b1 or 0x80)
+        // Copy extended length bytes if any
+        var i: USize = 2
+        while i < header_size do
+          r.push(frame(i)?)
+          i = i + 1
+        end
+        // Insert mask key
+        r.push(mask_key(0)?)
+        r.push(mask_key(1)?)
+        r.push(mask_key(2)?)
+        r.push(mask_key(3)?)
+        // Mask payload
+        var j: USize = 0
+        while j < payload_size do
+          r.push(frame(payload_offset + j)? xor mask_key(j % 4)?)
+          j = j + 1
+        end
+        r
       end
-      // Insert mask key
-      r.push(mask_key(0)?)
-      r.push(mask_key(1)?)
-      r.push(mask_key(2)?)
-      r.push(mask_key(3)?)
-      // Mask payload
-      var j: USize = 0
-      while j < payload_size do
-        r.push(frame(payload_offset + j)? xor mask_key(j % 4)?)
-        j = j + 1
-      end
-      r
-    end
     consume result

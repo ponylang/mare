@@ -52,7 +52,9 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     server_actor: WebSocketServerActor ref,
     config: WebSocketConfig val)
   =>
-    """Create a plain WebSocket (WS) connection handler."""
+    """
+    Create a plain WebSocket (WS) connection handler.
+    """
     _lifecycle_event_receiver = server_actor
     _config = config
     _state = _Handshaking
@@ -66,7 +68,9 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     server_actor: WebSocketServerActor ref,
     config: WebSocketConfig val)
   =>
-    """Create a secure WebSocket (WSS) connection handler."""
+    """
+    Create a secure WebSocket (WSS) connection handler.
+    """
     _lifecycle_event_receiver = server_actor
     _config = config
     _state = _Handshaking
@@ -75,13 +79,16 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
         auth, ssl_ctx, fd, server_actor, this)
 
   // -- Public send API --
-
   fun ref send_text(data: String val) =>
-    """Send a text message to the client."""
+    """
+    Send a text message to the client.
+    """
     _state.send_text(this, data)
 
   fun ref send_binary(data: Array[U8] val) =>
-    """Send a binary message to the client."""
+    """
+    Send a binary message to the client.
+    """
     _state.send_binary(this, data)
 
   fun ref close(
@@ -98,7 +105,6 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     _state.close(this, code, reason)
 
   // -- lori ServerLifecycleEventReceiver --
-
   fun ref _connection(): lori.TCPConnection => _tcp_connection
 
   fun ref _on_started() => None
@@ -134,14 +140,18 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
   fun ref _on_timer(token: lori.TimerToken) => None
 
   // -- Internal methods called by state classes --
-
   fun ref _set_state(state: _ConnectionState) =>
-    """Transition to a new connection state."""
+    """
+    Transition to a new connection state.
+    """
     _state = state
 
   fun ref _feed_handshake(data: Array[U8] iso) =>
-    """Process incoming data during the handshake phase."""
-    let max_size = match \exhaustive\ _config
+    """
+    Process incoming data during the handshake phase.
+    """
+    let max_size =
+      match \exhaustive\ _config
       | let c: WebSocketConfig val => c.max_handshake_size
       | None => _Unreachable(); return
       end
@@ -171,7 +181,8 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     | let err: HandshakeError =>
       match err
       | HandshakeWrongVersion =>
-        _send_http_error("426 Upgrade Required",
+        _send_http_error(
+          "426 Upgrade Required",
           "Sec-WebSocket-Version: 13\r\n")
       | HandshakeAcceptKeyFailed =>
         _send_http_error("500 Internal Server Error")
@@ -183,12 +194,16 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     end
 
   fun ref _feed_frames(data: Array[U8] iso) =>
-    """Process incoming frame data in the Open state."""
+    """
+    Process incoming frame data in the Open state.
+    """
     let data_val: Array[U8] val = consume data
     _feed_frames_from_val(data_val)
 
   fun ref _feed_frames_from_val(data: Array[U8] val) =>
-    """Process incoming frame data from a val array."""
+    """
+    Process incoming frame data from a val array.
+    """
     match \exhaustive\ _frame_parser.parse(data)
     | let frames: Array[_ParsedFrame val] val =>
       for frame in frames.values() do
@@ -206,7 +221,9 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     end
 
   fun ref _feed_frames_closing(data: Array[U8] iso) =>
-    """Process incoming frame data in the Closing state."""
+    """
+    Process incoming frame data in the Closing state.
+    """
     let data_val: Array[U8] val = consume data
     match \exhaustive\ _frame_parser.parse(data_val)
     | let frames: Array[_ParsedFrame val] val =>
@@ -235,7 +252,9 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     end
 
   fun ref _dispatch_frame(frame: _ParsedFrame val) =>
-    """Dispatch a parsed frame by opcode in the Open state."""
+    """
+    Dispatch a parsed frame by opcode in the Open state.
+    """
     match frame.opcode
     | 0x09 =>
       // Ping — auto-respond with pong
@@ -257,7 +276,8 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
       _state = _Closed
     else
       // Data frame (text, binary, continuation) — reassemble
-      let max_size = match \exhaustive\ _config
+      let max_size =
+        match \exhaustive\ _config
         | let c: WebSocketConfig val => c.max_message_size
         | None => _Unreachable(); return
         end
@@ -291,31 +311,37 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     _tcp_connection.send(data)
 
   fun ref _send_101_response(accept_key: String val) =>
-    """Send the HTTP 101 Switching Protocols response."""
-    let response: String val = recover val
-      String(256)
-        .>append("HTTP/1.1 101 Switching Protocols\r\n")
-        .>append("Upgrade: websocket\r\n")
-        .>append("Connection: Upgrade\r\n")
-        .>append("Sec-WebSocket-Accept: ")
-        .>append(accept_key)
-        .>append("\r\n\r\n")
-    end
+    """
+    Send the HTTP 101 Switching Protocols response.
+    """
+    let response: String val =
+      recover val
+        String(256)
+          .> append("HTTP/1.1 101 Switching Protocols\r\n")
+          .> append("Upgrade: websocket\r\n")
+          .> append("Connection: Upgrade\r\n")
+          .> append("Sec-WebSocket-Accept: ")
+          .> append(accept_key)
+          .> append("\r\n\r\n")
+      end
     _tcp_connection.send(response)
 
   fun ref _send_http_error(
     status: String val,
     extra_headers: String val = "")
   =>
-    """Send an HTTP error response and close."""
-    let response: String val = recover val
-      String(256)
-        .>append("HTTP/1.1 ")
-        .>append(status)
-        .>append("\r\n")
-        .>append(extra_headers)
-        .>append("Content-Length: 0\r\n\r\n")
-    end
+    """
+    Send an HTTP error response and close.
+    """
+    let response: String val =
+      recover val
+        String(256)
+          .> append("HTTP/1.1 ")
+          .> append(status)
+          .> append("\r\n")
+          .> append(extra_headers)
+          .> append("Content-Length: 0\r\n\r\n")
+      end
     _tcp_connection.send(response)
 
   fun ref _fire_on_open(request: UpgradeRequest val) =>

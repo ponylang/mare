@@ -35,7 +35,9 @@ class _HandshakeParser
     end
 
   fun _find_header_end(): (USize | None) =>
-    """Find the position of \\r\\n\\r\\n in the buffer."""
+    """
+    Find the position of \\r\\n\\r\\n in the buffer.
+    """
     if _buf.size() < 4 then return None end
     var i: USize = 0
     let limit = _buf.size() - 3
@@ -56,7 +58,9 @@ class _HandshakeParser
   fun _parse_request(header_end: USize)
     : (_HandshakeResult | HandshakeError)
   =>
-    """Parse the buffered HTTP request up to header_end."""
+    """
+    Parse the buffered HTTP request up to header_end.
+    """
     // Build request string from buffer bytes. String.clone() gives iso^
     // which auto-converts to val.
     let request_ref = String(header_end)
@@ -82,20 +86,23 @@ class _HandshakeParser
       if version != "HTTP/1.1" then return HandshakeInvalidHTTP end
 
       // Parse headers
-      let headers = recover val
-        let h = Array[(String val, String val)]
-        var j: USize = 1
-        while j < lines.size() do
-          let line = lines(j)?
-          let colon = try line.find(":")? else j = j + 1; continue end
-          // UpgradeRequest.header() depends on names being pre-lowered here.
-          let name: String val = line.substring(0, colon).lower()
-          let value: String val = line.substring(colon + 1).>strip()
-          h.push((name, value))
-          j = j + 1
+      let headers =
+        recover val
+          let h = Array[(String val, String val)]
+          var j: USize = 1
+          while j < lines.size() do
+            let line = lines(j)?
+            let colon =
+              try line.find(":")? else j = j + 1; continue end
+            // UpgradeRequest.header() depends on names being pre-lowered here.
+            let name: String val = line.substring(0, colon).lower()
+            let value: String val =
+              line.substring(colon + 1) .> strip()
+            h.push((name, value))
+            j = j + 1
+          end
+          h
         end
-        h
-      end
 
       // Validate required WebSocket headers
       var has_host = false
@@ -116,7 +123,8 @@ class _HandshakeParser
           // Connection header may contain multiple comma-separated tokens
           let tokens: Array[String val] val = value.split(",")
           for token in tokens.values() do
-            let trimmed: String val = token.clone().>strip()
+            let trimmed: String val =
+              token.clone() .> strip()
             let trimmed_lower: String val = trimmed.lower()
             if trimmed_lower == "upgrade" then
               has_connection_upgrade = true
@@ -131,7 +139,9 @@ class _HandshakeParser
 
       if not has_host then return HandshakeMissingHost end
       if not has_upgrade then return HandshakeMissingUpgrade end
-      if not has_connection_upgrade then return HandshakeMissingUpgrade end
+      if not has_connection_upgrade then
+        return HandshakeMissingUpgrade
+      end
 
       match \exhaustive\ websocket_version
       | let v: String val =>
@@ -161,10 +171,13 @@ class _HandshakeParser
         let remaining_s = String(_buf.size() - remaining_start)
         var k: USize = remaining_start
         while k < _buf.size() do
-          try remaining_s.push(_buf(k)?) else _Unreachable() end
+          try remaining_s.push(_buf(k)?)
+          else _Unreachable()
+          end
           k = k + 1
         end
-        let remaining: Array[U8] val = remaining_s.clone().iso_array()
+        let remaining: Array[U8] val =
+          remaining_s.clone().iso_array()
 
         let request = UpgradeRequest(uri, headers)
         _HandshakeResult(request, accept_key, remaining)
@@ -184,10 +197,15 @@ class _HandshakeParser
     """
     let magic = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
     Base64.encode(
-      crypto.Digest.sha1()?.>append(key)?.>append(magic)?.final()?)
+      crypto.Digest.sha1()?
+        .> append(key)?
+        .> append(magic)?
+        .final()?)
 
 class val _HandshakeResult
-  """A successfully parsed WebSocket upgrade request."""
+  """
+  A successfully parsed WebSocket upgrade request.
+  """
   let request: UpgradeRequest val
   let accept_key: String val
   let remaining: Array[U8] val
@@ -202,4 +220,6 @@ class val _HandshakeResult
     remaining = remaining'
 
 primitive _HandshakeNeedMore
-  """More data is needed to complete the HTTP upgrade request."""
+  """
+  More data is needed to complete the HTTP upgrade request.
+  """

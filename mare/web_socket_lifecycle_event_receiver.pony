@@ -29,15 +29,21 @@ trait WebSocketLifecycleEventReceiver
     true
 
   fun ref on_open(request: UpgradeRequest val) =>
-    """Called after the WebSocket handshake completes successfully."""
+    """
+    Called after the WebSocket handshake completes successfully.
+    """
     None
 
   fun ref on_text_message(data: String val) =>
-    """Called when a complete text message is received."""
+    """
+    Called when a complete text message is received.
+    """
     None
 
   fun ref on_binary_message(data: Array[U8] val) =>
-    """Called when a complete binary message is received."""
+    """
+    Called when a complete binary message is received.
+    """
     None
 
   fun ref on_closed(
@@ -59,13 +65,19 @@ trait WebSocketLifecycleEventReceiver
     None
 
   fun ref on_throttled() =>
-    """Called when backpressure is applied on the connection."""
+    """
+    Called when backpressure is applied on the connection.
+    """
     None
 
   fun ref on_unthrottled() =>
-    """Called when backpressure is released on the connection."""
+    """
+    Called when backpressure is released on the connection.
+    """
     None
 
   fun ref on_idle_timeout() =>
-    """Called when the connection's idle timeout fires."""
+    """
+    Called when the connection's idle timeout fires.
+    """
     None

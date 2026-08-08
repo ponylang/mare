@@ -9,7 +9,9 @@ class val UpgradeRequest
   let _headers: Array[(String val, String val)] val
 
   new val create(uri': String, headers': Array[(String val, String val)] val) =>
-    """Create an upgrade request with the given URI and headers."""
+    """
+    Create an upgrade request with the given URI and headers.
+    """
     uri = uri'
     _headers = headers'
 

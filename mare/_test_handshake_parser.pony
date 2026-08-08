@@ -13,18 +13,18 @@ primitive \nodoc\ _TestHandshakeHelper
   =>
     """Build a valid HTTP upgrade request."""
     let s = String(512)
-      .>append("GET ")
-      .>append(uri)
-      .>append(" HTTP/1.1\r\n")
-      .>append("Host: localhost\r\n")
-      .>append("Upgrade: websocket\r\n")
-      .>append("Connection: Upgrade\r\n")
-      .>append("Sec-WebSocket-Key: ")
-      .>append(key)
-      .>append("\r\n")
-      .>append("Sec-WebSocket-Version: 13\r\n")
-      .>append(extra_headers)
-      .>append("\r\n")
+      .> append("GET ")
+      .> append(uri)
+      .> append(" HTTP/1.1\r\n")
+      .> append("Host: localhost\r\n")
+      .> append("Upgrade: websocket\r\n")
+      .> append("Connection: Upgrade\r\n")
+      .> append("Sec-WebSocket-Key: ")
+      .> append(key)
+      .> append("\r\n")
+      .> append("Sec-WebSocket-Version: 13\r\n")
+      .> append(extra_headers)
+      .> append("\r\n")
     s.clone().iso_array()
 
 class \nodoc\ iso _TestHandshakeValid is UnitTest
@@ -54,12 +54,12 @@ class \nodoc\ iso _TestHandshakeRemainingBytes is UnitTest
     let request_data = _TestHandshakeHelper.valid_request()
     // Append extra bytes after the request
     let extra: Array[U8] val = recover val [as U8: 0x81; 0x85] end
-    let combined = recover iso
-      let c = Array[U8]
-      c.append(consume request_data)
-      c.append(extra)
-      c
-    end
+    let combined =
+      recover iso
+        Array[U8]
+          .> append(consume request_data)
+          .> append(extra)
+      end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume combined, 8192)
     | let result: _HandshakeResult =>
@@ -89,17 +89,18 @@ class \nodoc\ iso _TestHandshakeInvalidMethod is UnitTest
   fun name(): String => "handshake/invalid_method"
 
   fun apply(h: TestHelper) =>
-    let request: Array[U8] iso = recover iso
-      let s = String(256)
-        .>append("POST / HTTP/1.1\r\n")
-        .>append("Host: localhost\r\n")
-        .>append("Upgrade: websocket\r\n")
-        .>append("Connection: Upgrade\r\n")
-        .>append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
-        .>append("Sec-WebSocket-Version: 13\r\n")
-        .>append("\r\n")
-      s.clone().iso_array()
-    end
+    let request: Array[U8] iso =
+      recover iso
+        let s = String(256)
+          .> append("POST / HTTP/1.1\r\n")
+          .> append("Host: localhost\r\n")
+          .> append("Upgrade: websocket\r\n")
+          .> append("Connection: Upgrade\r\n")
+          .> append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
+          .> append("Sec-WebSocket-Version: 13\r\n")
+          .> append("\r\n")
+        s.clone().iso_array()
+      end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
     | HandshakeInvalidHTTP => None // expected
@@ -113,16 +114,17 @@ class \nodoc\ iso _TestHandshakeMissingHost is UnitTest
   fun name(): String => "handshake/missing_host"
 
   fun apply(h: TestHelper) =>
-    let request: Array[U8] iso = recover iso
-      let s = String(256)
-        .>append("GET / HTTP/1.1\r\n")
-        .>append("Upgrade: websocket\r\n")
-        .>append("Connection: Upgrade\r\n")
-        .>append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
-        .>append("Sec-WebSocket-Version: 13\r\n")
-        .>append("\r\n")
-      s.clone().iso_array()
-    end
+    let request: Array[U8] iso =
+      recover iso
+        let s = String(256)
+          .> append("GET / HTTP/1.1\r\n")
+          .> append("Upgrade: websocket\r\n")
+          .> append("Connection: Upgrade\r\n")
+          .> append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
+          .> append("Sec-WebSocket-Version: 13\r\n")
+          .> append("\r\n")
+        s.clone().iso_array()
+      end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
     | HandshakeMissingHost => None // expected
@@ -136,16 +138,17 @@ class \nodoc\ iso _TestHandshakeMissingUpgrade is UnitTest
   fun name(): String => "handshake/missing_upgrade"
 
   fun apply(h: TestHelper) =>
-    let request: Array[U8] iso = recover iso
-      let s = String(256)
-        .>append("GET / HTTP/1.1\r\n")
-        .>append("Host: localhost\r\n")
-        .>append("Connection: Upgrade\r\n")
-        .>append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
-        .>append("Sec-WebSocket-Version: 13\r\n")
-        .>append("\r\n")
-      s.clone().iso_array()
-    end
+    let request: Array[U8] iso =
+      recover iso
+        let s = String(256)
+          .> append("GET / HTTP/1.1\r\n")
+          .> append("Host: localhost\r\n")
+          .> append("Connection: Upgrade\r\n")
+          .> append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
+          .> append("Sec-WebSocket-Version: 13\r\n")
+          .> append("\r\n")
+        s.clone().iso_array()
+      end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
     | HandshakeMissingUpgrade => None // expected
@@ -159,17 +162,18 @@ class \nodoc\ iso _TestHandshakeWrongVersion is UnitTest
   fun name(): String => "handshake/wrong_version"
 
   fun apply(h: TestHelper) =>
-    let request: Array[U8] iso = recover iso
-      let s = String(256)
-        .>append("GET / HTTP/1.1\r\n")
-        .>append("Host: localhost\r\n")
-        .>append("Upgrade: websocket\r\n")
-        .>append("Connection: Upgrade\r\n")
-        .>append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
-        .>append("Sec-WebSocket-Version: 8\r\n")
-        .>append("\r\n")
-      s.clone().iso_array()
-    end
+    let request: Array[U8] iso =
+      recover iso
+        let s = String(256)
+          .> append("GET / HTTP/1.1\r\n")
+          .> append("Host: localhost\r\n")
+          .> append("Upgrade: websocket\r\n")
+          .> append("Connection: Upgrade\r\n")
+          .> append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
+          .> append("Sec-WebSocket-Version: 8\r\n")
+          .> append("\r\n")
+        s.clone().iso_array()
+      end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
     | HandshakeWrongVersion => None // expected
@@ -183,16 +187,17 @@ class \nodoc\ iso _TestHandshakeMissingKey is UnitTest
   fun name(): String => "handshake/missing_key"
 
   fun apply(h: TestHelper) =>
-    let request: Array[U8] iso = recover iso
-      let s = String(256)
-        .>append("GET / HTTP/1.1\r\n")
-        .>append("Host: localhost\r\n")
-        .>append("Upgrade: websocket\r\n")
-        .>append("Connection: Upgrade\r\n")
-        .>append("Sec-WebSocket-Version: 13\r\n")
-        .>append("\r\n")
-      s.clone().iso_array()
-    end
+    let request: Array[U8] iso =
+      recover iso
+        let s = String(256)
+          .> append("GET / HTTP/1.1\r\n")
+          .> append("Host: localhost\r\n")
+          .> append("Upgrade: websocket\r\n")
+          .> append("Connection: Upgrade\r\n")
+          .> append("Sec-WebSocket-Version: 13\r\n")
+          .> append("\r\n")
+        s.clone().iso_array()
+      end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
     | HandshakeMissingKey => None // expected
@@ -206,8 +211,9 @@ class \nodoc\ iso _TestHandshakeInvalidKeyBadBase64 is UnitTest
   fun name(): String => "handshake/invalid_key_bad_base64"
 
   fun apply(h: TestHelper) =>
-    let data = _TestHandshakeHelper.valid_request(
-      where key = "!!!invalid-key!!!!!!!!!==")
+    let data =
+      _TestHandshakeHelper.valid_request(
+        where key = "!!!invalid-key!!!!!!!!!==")
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume data, 8192)
     | HandshakeInvalidKey => None // expected
@@ -236,17 +242,18 @@ class \nodoc\ iso _TestHandshakeCaseInsensitive is UnitTest
   fun name(): String => "handshake/case_insensitive"
 
   fun apply(h: TestHelper) =>
-    let request: Array[U8] iso = recover iso
-      let s = String(256)
-        .>append("GET / HTTP/1.1\r\n")
-        .>append("Host: localhost\r\n")
-        .>append("upgrade: WebSocket\r\n")
-        .>append("connection: Upgrade\r\n")
-        .>append("sec-websocket-key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
-        .>append("sec-websocket-version: 13\r\n")
-        .>append("\r\n")
-      s.clone().iso_array()
-    end
+    let request: Array[U8] iso =
+      recover iso
+        let s = String(256)
+          .> append("GET / HTTP/1.1\r\n")
+          .> append("Host: localhost\r\n")
+          .> append("upgrade: WebSocket\r\n")
+          .> append("connection: Upgrade\r\n")
+          .> append("sec-websocket-key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
+          .> append("sec-websocket-version: 13\r\n")
+          .> append("\r\n")
+        s.clone().iso_array()
+      end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
     | let result: _HandshakeResult =>
@@ -267,15 +274,16 @@ class \nodoc\ iso _TestHandshakeIncremental is UnitTest
     let split_at = full_size / 2
     let parser = _HandshakeParser
 
-    let first_half = recover iso
-      let a = Array[U8](split_at)
-      var i: USize = 0
-      while i < split_at do
-        try a.push(full_request(i)?) else _Unreachable() end
-        i = i + 1
+    let first_half =
+      recover iso
+        let a = Array[U8](split_at)
+        var i: USize = 0
+        while i < split_at do
+          try a.push(full_request(i)?) else _Unreachable() end
+          i = i + 1
+        end
+        a
       end
-      a
-    end
 
     match \exhaustive\ parser(consume first_half, 8192)
     | _HandshakeNeedMore => None // expected
@@ -283,15 +291,16 @@ class \nodoc\ iso _TestHandshakeIncremental is UnitTest
     | let err: HandshakeError => h.fail("unexpected error")
     end
 
-    let second_half = recover iso
-      let a = Array[U8](full_size - split_at)
-      var i: USize = split_at
-      while i < full_size do
-        try a.push(full_request(i)?) else _Unreachable() end
-        i = i + 1
+    let second_half =
+      recover iso
+        let a = Array[U8](full_size - split_at)
+        var i: USize = split_at
+        while i < full_size do
+          try a.push(full_request(i)?) else _Unreachable() end
+          i = i + 1
+        end
+        a
       end
-      a
-    end
 
     match \exhaustive\ parser(consume second_half, 8192)
     | let result: _HandshakeResult =>
@@ -327,17 +336,18 @@ class \nodoc\ iso _TestHandshakeConnectionMultiToken is UnitTest
   fun name(): String => "handshake/connection_multi_token"
 
   fun apply(h: TestHelper) =>
-    let request: Array[U8] iso = recover iso
-      let s = String(256)
-        .>append("GET / HTTP/1.1\r\n")
-        .>append("Host: localhost\r\n")
-        .>append("Upgrade: websocket\r\n")
-        .>append("Connection: keep-alive, Upgrade\r\n")
-        .>append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
-        .>append("Sec-WebSocket-Version: 13\r\n")
-        .>append("\r\n")
-      s.clone().iso_array()
-    end
+    let request: Array[U8] iso =
+      recover iso
+        let s = String(256)
+          .> append("GET / HTTP/1.1\r\n")
+          .> append("Host: localhost\r\n")
+          .> append("Upgrade: websocket\r\n")
+          .> append("Connection: keep-alive, Upgrade\r\n")
+          .> append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
+          .> append("Sec-WebSocket-Version: 13\r\n")
+          .> append("\r\n")
+        s.clone().iso_array()
+      end
     let parser = _HandshakeParser
     match \exhaustive\ parser(consume request, 8192)
     | let result: _HandshakeResult =>

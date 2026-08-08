@@ -8,7 +8,9 @@ primitive _Utf8Validator
   """
 
   fun is_valid(data: Array[U8] box): Bool =>
-    """Return true if `data` is valid UTF-8."""
+    """
+    Return true if `data` is valid UTF-8.
+    """
     var i: USize = 0
     let size = data.size()
 

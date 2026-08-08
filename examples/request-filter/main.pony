@@ -1,25 +1,19 @@
-"""
-A WebSocket server that filters connections by URI path and Origin header.
-
-Demonstrates `on_upgrade_request()` to accept or reject connections before
-the handshake completes. Only connections to `/ws` from origin
-`http://localhost` are accepted; all others receive 403 Forbidden.
-
-Connect with: `websocat -H "Origin: http://localhost" ws://localhost:8081/ws`
-Rejected:     `websocat ws://localhost:8081/nope`
-"""
 use lori = "lori"
 use ws = "../../mare"
 
 actor Main
   new create(env: Env) =>
     let auth = lori.TCPListenAuth(env.root)
-    let config = ws.WebSocketConfig(where
-      host' = "localhost",
-      port' = "8081")
+    let config =
+      ws.WebSocketConfig(where
+        host' = "localhost",
+        port' = "8081")
     FilterListener(auth, config, env.out)
 
 actor FilterListener is lori.TCPListenerActor
+  """
+  Listens for TCP connections and spawns a FilterHandler for each one.
+  """
   var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
   let _server_auth: lori.TCPServerAuth
   let _config: ws.WebSocketConfig val
@@ -47,6 +41,9 @@ actor FilterListener is lori.TCPListenerActor
     _out.print("Failed to listen on " + _config.host + ":" + _config.port)
 
 actor FilterHandler is ws.WebSocketServerActor
+  """
+  Handles a single client connection, filtering by URI and Origin.
+  """
   var _ws: ws.WebSocketServer = ws.WebSocketServer.none()
   let _out: OutStream
 
@@ -62,10 +59,11 @@ actor FilterHandler is ws.WebSocketServerActor
   fun ref _websocket(): ws.WebSocketServer => _ws
 
   fun ref on_upgrade_request(request: ws.UpgradeRequest val): Bool =>
-    let origin = match \exhaustive\ request.header("Origin")
-    | let o: String val => o
-    | None => ""
-    end
+    let origin =
+      match \exhaustive\ request.header("Origin")
+      | let o: String val => o
+      | None => ""
+      end
 
     if (request.uri == "/ws") and (origin == "http://localhost") then
       _out.print("Accepted: uri=" + request.uri

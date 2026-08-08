@@ -73,14 +73,18 @@ class _FragmentReassembler
     end
 
   fun ref _reset() =>
-    """Reset reassembly state for the next message."""
+    """
+    Reset reassembly state for the next message.
+    """
     _in_progress = false
     _is_text = false
     _buf = Array[U8]
     _total_size = 0
 
 class val _CompleteMessage
-  """A fully reassembled WebSocket message."""
+  """
+  A fully reassembled WebSocket message.
+  """
   let is_text: Bool
   let data: Array[U8] val
 
@@ -89,10 +93,14 @@ class val _CompleteMessage
     data = data'
 
 primitive _FragmentContinue
-  """More fragments are expected to complete the message."""
+  """
+  More fragments are expected to complete the message.
+  """
 
 class val _ReassemblyError
-  """A reassembly error with the close code to send."""
+  """
+  A reassembly error with the close code to send.
+  """
   let code: CloseCode
 
   new val create(code': CloseCode) =>

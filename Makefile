@@ -82,4 +82,10 @@ all: test
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-.PHONY: all examples clean TAGS test test-one
+LINT_WITH := corral run -- pony-lint
+
+lint:
+	$(GET_DEPENDENCIES_WITH)
+	$(LINT_WITH) .
+
+.PHONY: all examples clean TAGS test test-one lint
