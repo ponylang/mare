@@ -43,8 +43,8 @@ class _HandshakeParser
     let limit = _buf.size() - 3
     while i < limit do
       try
-        if (_buf(i)? == '\r') and (_buf(i + 1)? == '\n')
-          and (_buf(i + 2)? == '\r') and (_buf(i + 3)? == '\n')
+        if (_buf(i)? == '\r') and (_buf(i + 1)? == '\n') and
+          (_buf(i + 2)? == '\r') and (_buf(i + 3)? == '\n')
         then
           return i
         end

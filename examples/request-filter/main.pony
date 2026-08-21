@@ -66,12 +66,12 @@ actor FilterHandler is ws.WebSocketServerActor
       end
 
     if (request.uri == "/ws") and (origin == "http://localhost") then
-      _out.print("Accepted: uri=" + request.uri
-        + " origin=" + origin)
+      _out.print("Accepted: uri=" + request.uri +
+        " origin=" + origin)
       true
     else
-      _out.print("Rejected: uri=" + request.uri
-        + " origin=" + origin)
+      _out.print("Rejected: uri=" + request.uri +
+        " origin=" + origin)
       false
     end
 
