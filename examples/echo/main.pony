@@ -73,5 +73,5 @@ actor EchoHandler is ws.WebSocketServerActor
     close_status: ws.CloseStatus,
     close_reason: String val)
   =>
-    _out.print("Client disconnected: " + close_status.string()
-      + if close_reason.size() > 0 then " (" + close_reason + ")" else "" end)
+    _out.print("Client disconnected: " + close_status.string() +
+      if close_reason.size() > 0 then " (" + close_reason + ")" else "" end)

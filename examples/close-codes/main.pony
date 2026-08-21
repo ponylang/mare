@@ -90,6 +90,6 @@ actor CloseHandler is ws.WebSocketServerActor
     | let _: ws.CloseAbnormalClosure =>
       _out.print("Connection dropped abnormally")
     | let c: ws.OtherCloseCode =>
-      _out.print("Closed with other code: " + c.code().string()
-        + reason_suffix)
+      _out.print("Closed with other code: " + c.code().string() +
+        reason_suffix)
     end

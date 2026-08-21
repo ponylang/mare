@@ -153,8 +153,8 @@ class \nodoc\ _TestExtractorPropertyOtherCodes is Property1[U16]
     | let o: OtherCloseCode =>
       h.assert_eq[U16](sample, o.code())
     else
-      h.fail("Code " + sample.string()
-        + " should produce OtherCloseCode but got named primitive")
+      h.fail("Code " + sample.string() +
+        " should produce OtherCloseCode but got named primitive")
     end
 
 class \nodoc\ _TestExtractorPropertyRoundtrip is Property1[U16]
