@@ -482,9 +482,9 @@ class \nodoc\ iso _TestFrameParserCloseValidCodes is Property1[U16]
   fun gen(): Generator[U16] =>
     Generators.frequency[U16](
       [ as WeightedGenerator[U16]:
-        (1, Generators.u16(where min = 1000, max = 1003))
-        (1, Generators.u16(where min = 1007, max = 1014))
-        (1, Generators.u16(where min = 3000, max = 4999))
+        (1, Generators.u16(where from = 1000, to = 1003))
+        (1, Generators.u16(where from = 1007, to = 1014))
+        (1, Generators.u16(where from = 3000, to = 4999))
       ])
 
   fun property(code: U16, h: PropertyHelper) ? =>
@@ -509,10 +509,10 @@ class \nodoc\ iso _TestFrameParserCloseInvalidCodes is Property1[U16]
   fun gen(): Generator[U16] =>
     Generators.frequency[U16](
       [ as WeightedGenerator[U16]:
-        (1, Generators.u16(where min = 0, max = 999))
-        (1, Generators.u16(where min = 1004, max = 1006))
-        (1, Generators.u16(where min = 1015, max = 2999))
-        (1, Generators.u16(where min = 5000, max = 65535))
+        (1, Generators.u16(where from = 0, to = 999))
+        (1, Generators.u16(where from = 1004, to = 1006))
+        (1, Generators.u16(where from = 1015, to = 2999))
+        (1, Generators.u16(where from = 5000, to = 65535))
       ])
 
   fun property(code: U16, h: PropertyHelper) =>
@@ -535,14 +535,14 @@ class \nodoc\ iso _TestFrameParserCloseMixedCodes is Property1[U16]
     Generators.frequency[U16](
       [ as WeightedGenerator[U16]:
         // Valid ranges
-        (1, Generators.u16(where min = 1000, max = 1003))
-        (1, Generators.u16(where min = 1007, max = 1014))
-        (1, Generators.u16(where min = 3000, max = 4999))
+        (1, Generators.u16(where from = 1000, to = 1003))
+        (1, Generators.u16(where from = 1007, to = 1014))
+        (1, Generators.u16(where from = 3000, to = 4999))
         // Invalid ranges
-        (1, Generators.u16(where min = 0, max = 999))
-        (1, Generators.u16(where min = 1004, max = 1006))
-        (1, Generators.u16(where min = 1015, max = 2999))
-        (1, Generators.u16(where min = 5000, max = 65535))
+        (1, Generators.u16(where from = 0, to = 999))
+        (1, Generators.u16(where from = 1004, to = 1006))
+        (1, Generators.u16(where from = 1015, to = 2999))
+        (1, Generators.u16(where from = 5000, to = 65535))
       ])
 
   fun property(code: U16, h: PropertyHelper) =>
@@ -568,7 +568,7 @@ class \nodoc\ iso _TestFrameParserPropertyRandom is Property1[USize]
   fun name(): String => "frame_parser/property_random_frames"
 
   fun gen(): Generator[USize] =>
-    Generators.usize(where min = 0, max = 200)
+    Generators.usize(where from = 0, to = 200)
 
   fun property(payload_size: USize, h: PropertyHelper) ? =>
     let payload: Array[U8] val =

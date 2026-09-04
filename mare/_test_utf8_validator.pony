@@ -115,7 +115,7 @@ class \nodoc\ iso _TestUtf8PropertyValidStrings is Property1[String]
 
   fun gen(): Generator[String] =>
     Generators.ascii_printable(
-      where min = 0, max = 100)
+      where from = 0, to = 100)
 
   fun property(sample: String, h: PropertyHelper) =>
     h.assert_true(_Utf8Validator.is_valid(sample.array()))
@@ -126,7 +126,7 @@ class \nodoc\ iso _TestUtf8PropertyInvalidByte is Property1[U8]
 
   fun gen(): Generator[U8] =>
     // Generate bytes in range 0xF5..0xFF
-    Generators.u8(where min = 0xF5)
+    Generators.u8(where from = 0xF5)
 
   fun property(sample: U8, h: PropertyHelper) =>
     h.assert_false(_Utf8Validator.is_valid(

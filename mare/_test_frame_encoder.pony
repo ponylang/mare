@@ -137,7 +137,7 @@ class \nodoc\ iso _TestFrameEncoderPropertyRoundtrip is Property1[USize]
   fun name(): String => "frame_encoder/property_roundtrip"
 
   fun gen(): Generator[USize] =>
-    Generators.usize(where min = 0, max = 300)
+    Generators.usize(where from = 0, to = 300)
 
   fun property(payload_size: USize, h: PropertyHelper) ? =>
     // Build a payload of the given size
