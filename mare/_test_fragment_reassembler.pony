@@ -160,7 +160,7 @@ class \nodoc\ iso _TestReassemblerPropertyRoundtrip is Property1[USize]
   fun name(): String => "reassembler/property_roundtrip"
 
   fun gen(): Generator[USize] =>
-    Generators.usize(where min = 1, max = 500)
+    Generators.usize(where from = 1, to = 500)
 
   fun property(total_size: USize, h: PropertyHelper) ? =>
     // Build a payload

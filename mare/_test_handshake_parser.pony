@@ -361,7 +361,7 @@ class \nodoc\ iso _TestHandshakePropertyValidRequests is Property1[String]
   fun name(): String => "handshake/property_valid_requests"
 
   fun gen(): Generator[String] =>
-    Generators.ascii_letters(where min = 1, max = 50)
+    Generators.ascii_letters(where from = 1, to = 50)
 
   fun property(uri_suffix: String, h: PropertyHelper) =>
     let test_uri: String val = "/" + uri_suffix
@@ -384,7 +384,7 @@ class \nodoc\ iso _TestHandshakePropertyValidKeys is Property1[String]
   fun name(): String => "handshake/property_valid_keys"
 
   fun gen(): Generator[String] =>
-    Generators.byte_string(Generators.u8() where min = 16, max = 16)
+    Generators.byte_string(Generators.u8() where from = 16, to = 16)
 
   fun property(raw_key: String, h: PropertyHelper) =>
     let key: String val = Base64.encode(raw_key)
@@ -407,8 +407,8 @@ class \nodoc\ iso _TestHandshakePropertyInvalidKeyLength is Property1[String]
 
   fun gen(): Generator[String] =>
     // Generate lengths 1-15 and 17-32, excluding 16
-    let short = Generators.byte_string(Generators.u8() where min = 0, max = 15)
-    let long = Generators.byte_string(Generators.u8() where min = 17, max = 32)
+    let short = Generators.byte_string(Generators.u8() where from = 0, to = 15)
+    let long = Generators.byte_string(Generators.u8() where from = 17, to = 32)
     short.union[String](long)
 
   fun property(raw_key: String, h: PropertyHelper) =>
