@@ -1,5 +1,4 @@
 use "files"
-use ssl_net = "ssl/net"
 use lori = "lori"
 use ws = "../../mare"
 
@@ -9,7 +8,7 @@ actor Main
     let sslctx =
       try
         recover val
-          ssl_net.SSLContext
+          lori.SSLContext
             .> set_authority(
               FilePath(file_auth, "assets/cert.pem"))?
             .> set_cert(
@@ -38,13 +37,13 @@ actor WssListener is lori.TCPListenerActor
   let _server_auth: lori.TCPServerAuth
   let _config: ws.WebSocketConfig val
   let _out: OutStream
-  let _ssl_ctx: ssl_net.SSLContext val
+  let _ssl_ctx: lori.SSLContext val
 
   new create(
     auth: lori.TCPListenAuth,
     config: ws.WebSocketConfig val,
     out: OutStream,
-    ssl_ctx: ssl_net.SSLContext val)
+    ssl_ctx: lori.SSLContext val)
   =>
     _server_auth = lori.TCPServerAuth(auth)
     _config = config
@@ -75,7 +74,7 @@ actor WssHandler is ws.WebSocketServerActor
     fd: U32,
     config: ws.WebSocketConfig val,
     out: OutStream,
-    ssl_ctx: ssl_net.SSLContext val)
+    ssl_ctx: lori.SSLContext val)
   =>
     _out = out
     _ws = ws.WebSocketServer.ssl(auth, ssl_ctx, fd, this, config)
