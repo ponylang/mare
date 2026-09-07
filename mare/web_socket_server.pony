@@ -1,5 +1,4 @@
 use lori = "lori"
-use ssl_net = "ssl/net"
 
 class WebSocketServer is lori.ServerLifecycleEventReceiver
   """
@@ -63,7 +62,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
 
   new ssl(
     auth: lori.TCPServerAuth,
-    ssl_ctx: ssl_net.SSLContext val,
+    ssl_ctx: lori.SSLContext val,
     fd: U32,
     server_actor: WebSocketServerActor ref,
     config: WebSocketConfig val)

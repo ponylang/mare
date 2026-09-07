@@ -69,11 +69,9 @@ actor EchoHandler is WebSocketServerActor
 ## WSS (Secure WebSocket)
 
 For TLS-encrypted connections, use `WebSocketServer.ssl()` instead of
-`create()` and pass an `ssl.net.SSLContext`:
+`create()` and pass a `lori.SSLContext`:
 
 ```pony
-use ssl_net = "ssl/net"
-
 // In the listener's _on_accept (store _server_auth from auth in constructor):
 fun ref _on_accept(fd: U32): SecureHandler =>
   SecureHandler(_server_auth, _ssl_ctx, fd, _config)
@@ -82,7 +80,7 @@ fun ref _on_accept(fd: U32): SecureHandler =>
 actor SecureHandler is WebSocketServerActor
   var _ws: WebSocketServer = WebSocketServer.none()
 
-  new create(auth: lori.TCPServerAuth, ssl_ctx: ssl_net.SSLContext val,
+  new create(auth: lori.TCPServerAuth, ssl_ctx: lori.SSLContext val,
     fd: U32, config: WebSocketConfig val)
   =>
     _ws = WebSocketServer.ssl(auth, ssl_ctx, fd, this, config)
