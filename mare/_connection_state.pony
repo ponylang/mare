@@ -1,4 +1,4 @@
-use lori = "lori"
+use "net"
 
 trait val _ConnectionState
   """
@@ -31,9 +31,9 @@ trait val _ConnectionState
     Handle backpressure released notification.
     """
 
-  fun on_sent(server: WebSocketServer ref, token: lori.SendToken)
+  fun on_sent(server: WebSocketServer ref, token: SendToken)
     """
-    Handle send completion notification from lori.
+    Handle send completion notification.
     """
 
   fun on_idle_timeout(server: WebSocketServer ref)
@@ -73,7 +73,7 @@ primitive _Handshaking is _ConnectionState
 
   fun on_throttled(server: WebSocketServer ref) => None
   fun on_unthrottled(server: WebSocketServer ref) => None
-  fun on_sent(server: WebSocketServer ref, token: lori.SendToken) => None
+  fun on_sent(server: WebSocketServer ref, token: SendToken) => None
   fun on_idle_timeout(server: WebSocketServer ref) => None
   fun send_text(server: WebSocketServer ref, data: String val) => None
 
@@ -109,7 +109,7 @@ primitive _Open is _ConnectionState
   fun on_unthrottled(server: WebSocketServer ref) =>
     server._fire_on_unthrottled()
 
-  fun on_sent(server: WebSocketServer ref, token: lori.SendToken) => None
+  fun on_sent(server: WebSocketServer ref, token: SendToken) => None
 
   fun on_idle_timeout(server: WebSocketServer ref) =>
     server._fire_on_idle_timeout()
@@ -146,7 +146,7 @@ primitive _Closing is _ConnectionState
 
   fun on_throttled(server: WebSocketServer ref) => None
   fun on_unthrottled(server: WebSocketServer ref) => None
-  fun on_sent(server: WebSocketServer ref, token: lori.SendToken) => None
+  fun on_sent(server: WebSocketServer ref, token: SendToken) => None
   fun on_idle_timeout(server: WebSocketServer ref) => None
   fun send_text(server: WebSocketServer ref, data: String val) => None
 
@@ -172,7 +172,7 @@ primitive _Closed is _ConnectionState
   fun on_closed(server: WebSocketServer ref) => None
   fun on_throttled(server: WebSocketServer ref) => None
   fun on_unthrottled(server: WebSocketServer ref) => None
-  fun on_sent(server: WebSocketServer ref, token: lori.SendToken) => None
+  fun on_sent(server: WebSocketServer ref, token: SendToken) => None
   fun on_idle_timeout(server: WebSocketServer ref) => None
   fun send_text(server: WebSocketServer ref, data: String val) => None
 

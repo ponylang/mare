@@ -1,6 +1,6 @@
 # Mare
 
-A WebSocket server library for Pony, built on lori.
+A WebSocket server library for Pony.
 
 <!-- contributor-only -->
 ## Contributing with an AI assistant
@@ -54,10 +54,10 @@ _Handshaking → _Open → _Closing → _Closed
         (handshake failure, error, or abnormal close)
 ```
 
-A close-handshake timeout looks like a job for lori's idle timeout, but that resets on any TCP receive, so it cannot bound a close; the OS TCP timeout covers the degenerate case instead.
+A close-handshake timeout looks like a job for net's idle timeout, but that resets on any TCP receive, so it cannot bound a close; the OS TCP timeout covers the degenerate case instead.
 
 ## Conventions
 
-- Prefer qualified imports (`use lori = "lori"`, `use crypto = "ssl/crypto"`, and so on).
+- Prefer qualified imports (`use crypto = "ssl/crypto"` and so on) when the package defines types that could clash with imported names.
 - New test classes go in `_test_*.pony` files, registered in `_test.pony`.
 - `\nodoc\` on test classes.
