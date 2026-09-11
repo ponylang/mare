@@ -1,5 +1,5 @@
 use "files"
-use lori = "lori"
+use "net"
 use ws = "../../mare"
 
 actor Main
@@ -8,7 +8,7 @@ actor Main
     let sslctx =
       try
         recover val
-          lori.SSLContext
+          SSLContext
             .> set_authority(
               FilePath(file_auth, "assets/cert.pem"))?
             .> set_cert(
@@ -22,36 +22,36 @@ actor Main
         return
       end
 
-    let auth = lori.TCPListenAuth(env.root)
+    let auth = TCPListenAuth(env.root)
     let config =
       ws.WebSocketConfig(where
         host' = "localhost",
         port' = "8443")
     WssListener(auth, config, env.out, sslctx)
 
-actor WssListener is lori.TCPListenerActor
+actor WssListener is TCPListenerActor
   """
   Listens for TLS connections and spawns a WssHandler for each one.
   """
-  var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
-  let _server_auth: lori.TCPServerAuth
+  var _tcp_listener: TCPListener = TCPListener.none()
+  let _server_auth: TCPServerAuth
   let _config: ws.WebSocketConfig val
   let _out: OutStream
-  let _ssl_ctx: lori.SSLContext val
+  let _ssl_ctx: SSLContext val
 
   new create(
-    auth: lori.TCPListenAuth,
+    auth: TCPListenAuth,
     config: ws.WebSocketConfig val,
     out: OutStream,
-    ssl_ctx: lori.SSLContext val)
+    ssl_ctx: SSLContext val)
   =>
-    _server_auth = lori.TCPServerAuth(auth)
+    _server_auth = TCPServerAuth(auth)
     _config = config
     _out = out
     _ssl_ctx = ssl_ctx
-    _tcp_listener = lori.TCPListener(auth, config.host, config.port, this)
+    _tcp_listener = TCPListener(auth, config.host, config.port, this)
 
-  fun ref _listener(): lori.TCPListener => _tcp_listener
+  fun ref _listener(): TCPListener => _tcp_listener
 
   fun ref _on_accept(fd: U32): WssHandler =>
     WssHandler(_server_auth, fd, _config, _out, _ssl_ctx)
@@ -70,11 +70,11 @@ actor WssHandler is ws.WebSocketServerActor
   let _out: OutStream
 
   new create(
-    auth: lori.TCPServerAuth,
+    auth: TCPServerAuth,
     fd: U32,
     config: ws.WebSocketConfig val,
     out: OutStream,
-    ssl_ctx: lori.SSLContext val)
+    ssl_ctx: SSLContext val)
   =>
     _out = out
     _ws = ws.WebSocketServer.ssl(auth, ssl_ctx, fd, this, config)

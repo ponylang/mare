@@ -1,14 +1,13 @@
 """
 # Mare
 
-A WebSocket server for Pony built on
-[lori](https://github.com/ponylang/lori).
+A WebSocket server for Pony.
 
 ## Architecture
 
-Mare follows lori's "your actor IS the connection" pattern:
+Mare follows the "your actor IS the connection" pattern:
 
-- A **listener actor** (`lori.TCPListenerActor`) accepts TCP connections.
+- A **listener actor** (`TCPListenerActor`) accepts TCP connections.
   On each accept, it creates a new connection actor.
 - A **connection actor** (`WebSocketServerActor`) owns a `WebSocketServer`
   protocol handler and receives WebSocket lifecycle callbacks.
@@ -23,26 +22,26 @@ handshake — and delivers application-level events through the
 A minimal echo server:
 
 ```pony
-use lori = "lori"
+use "net"
 use "mare"
 
 actor Main
   new create(env: Env) =>
-    let auth = lori.TCPListenAuth(env.root)
+    let auth = TCPListenAuth(env.root)
     let config = WebSocketConfig(where host' = "localhost", port' = "8080")
     EchoListener(auth, config)
 
-actor EchoListener is lori.TCPListenerActor
-  var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
-  let _server_auth: lori.TCPServerAuth
+actor EchoListener is TCPListenerActor
+  var _tcp_listener: TCPListener = TCPListener.none()
+  let _server_auth: TCPServerAuth
   let _config: WebSocketConfig val
 
-  new create(auth: lori.TCPListenAuth, config: WebSocketConfig val) =>
-    _server_auth = lori.TCPServerAuth(auth)
+  new create(auth: TCPListenAuth, config: WebSocketConfig val) =>
+    _server_auth = TCPServerAuth(auth)
     _config = config
-    _tcp_listener = lori.TCPListener(auth, config.host, config.port, this)
+    _tcp_listener = TCPListener(auth, config.host, config.port, this)
 
-  fun ref _listener(): lori.TCPListener => _tcp_listener
+  fun ref _listener(): TCPListener => _tcp_listener
 
   fun ref _on_accept(fd: U32): EchoHandler =>
     EchoHandler(_server_auth, fd, _config)
@@ -52,7 +51,7 @@ actor EchoListener is lori.TCPListenerActor
 actor EchoHandler is WebSocketServerActor
   var _ws: WebSocketServer = WebSocketServer.none()
 
-  new create(auth: lori.TCPServerAuth, fd: U32,
+  new create(auth: TCPServerAuth, fd: U32,
     config: WebSocketConfig val)
   =>
     _ws = WebSocketServer(auth, fd, this, config)
@@ -69,7 +68,7 @@ actor EchoHandler is WebSocketServerActor
 ## WSS (Secure WebSocket)
 
 For TLS-encrypted connections, use `WebSocketServer.ssl()` instead of
-`create()` and pass a `lori.SSLContext`:
+`create()` and pass an `SSLContext`:
 
 ```pony
 // In the listener's _on_accept (store _server_auth from auth in constructor):
@@ -80,7 +79,7 @@ fun ref _on_accept(fd: U32): SecureHandler =>
 actor SecureHandler is WebSocketServerActor
   var _ws: WebSocketServer = WebSocketServer.none()
 
-  new create(auth: lori.TCPServerAuth, ssl_ctx: lori.SSLContext val,
+  new create(auth: TCPServerAuth, ssl_ctx: SSLContext val,
     fd: U32, config: WebSocketConfig val)
   =>
     _ws = WebSocketServer.ssl(auth, ssl_ctx, fd, this, config)

@@ -1,35 +1,35 @@
-use lori = "lori"
+use "net"
 use ws = "../../mare"
 
 actor Main
   new create(env: Env) =>
-    let auth = lori.TCPListenAuth(env.root)
+    let auth = TCPListenAuth(env.root)
     let config =
       ws.WebSocketConfig(where
         host' = "localhost",
         port' = "8080")
     EchoListener(auth, config, env.out)
 
-actor EchoListener is lori.TCPListenerActor
+actor EchoListener is TCPListenerActor
   """
   Listens for TCP connections and spawns an EchoHandler for each one.
   """
-  var _tcp_listener: lori.TCPListener = lori.TCPListener.none()
-  let _server_auth: lori.TCPServerAuth
+  var _tcp_listener: TCPListener = TCPListener.none()
+  let _server_auth: TCPServerAuth
   let _config: ws.WebSocketConfig val
   let _out: OutStream
 
   new create(
-    auth: lori.TCPListenAuth,
+    auth: TCPListenAuth,
     config: ws.WebSocketConfig val,
     out: OutStream)
   =>
-    _server_auth = lori.TCPServerAuth(auth)
+    _server_auth = TCPServerAuth(auth)
     _config = config
     _out = out
-    _tcp_listener = lori.TCPListener(auth, config.host, config.port, this)
+    _tcp_listener = TCPListener(auth, config.host, config.port, this)
 
-  fun ref _listener(): lori.TCPListener => _tcp_listener
+  fun ref _listener(): TCPListener => _tcp_listener
 
   fun ref _on_accept(fd: U32): EchoHandler =>
     EchoHandler(_server_auth, fd, _config, _out)
@@ -48,7 +48,7 @@ actor EchoHandler is ws.WebSocketServerActor
   let _out: OutStream
 
   new create(
-    auth: lori.TCPServerAuth,
+    auth: TCPServerAuth,
     fd: U32,
     config: ws.WebSocketConfig val,
     out: OutStream)

@@ -1,6 +1,6 @@
-use lori = "lori"
+use "net"
 
-class WebSocketServer is lori.ServerLifecycleEventReceiver
+class WebSocketServer is ServerLifecycleEventReceiver
   """
   WebSocket protocol handler that manages handshaking, framing, and
   connection lifecycle for a single WebSocket connection.
@@ -16,7 +16,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
   actor MyHandler is WebSocketServerActor
     var _ws: WebSocketServer = WebSocketServer.none()
 
-    new create(auth: lori.TCPServerAuth, fd: U32,
+    new create(auth: TCPServerAuth, fd: U32,
       config: WebSocketConfig val)
     =>
       _ws = WebSocketServer(auth, fd, this, config)
@@ -26,7 +26,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
   """
   let _lifecycle_event_receiver: (WebSocketLifecycleEventReceiver ref | None)
   let _config: (WebSocketConfig val | None)
-  var _tcp_connection: lori.TCPConnection = lori.TCPConnection.none()
+  var _tcp_connection: TCPConnection = TCPConnection.none()
   var _state: _ConnectionState = _Closed
   var _handshake_parser: _HandshakeParser = _HandshakeParser
   var _frame_parser: _FrameParser = _FrameParser
@@ -46,7 +46,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     _config = None
 
   new create(
-    auth: lori.TCPServerAuth,
+    auth: TCPServerAuth,
     fd: U32,
     server_actor: WebSocketServerActor ref,
     config: WebSocketConfig val)
@@ -58,11 +58,11 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     _config = config
     _state = _Handshaking
     _tcp_connection =
-      lori.TCPConnection.server(auth, fd, server_actor, this)
+      TCPConnection.server(auth, fd, server_actor, this)
 
   new ssl(
-    auth: lori.TCPServerAuth,
-    ssl_ctx: lori.SSLContext val,
+    auth: TCPServerAuth,
+    ssl_ctx: SSLContext val,
     fd: U32,
     server_actor: WebSocketServerActor ref,
     config: WebSocketConfig val)
@@ -74,7 +74,7 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     _config = config
     _state = _Handshaking
     _tcp_connection =
-      lori.TCPConnection.ssl_server(
+      TCPConnection.ssl_server(
         auth, ssl_ctx, fd, server_actor, this)
 
   // -- Public send API --
@@ -103,19 +103,19 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
     """
     _state.close(this, code, reason)
 
-  // -- lori ServerLifecycleEventReceiver --
-  fun ref _connection(): lori.TCPConnection => _tcp_connection
+  // -- net ServerLifecycleEventReceiver --
+  fun ref _connection(): TCPConnection => _tcp_connection
 
   fun ref _on_started() => None
 
-  fun ref _on_received(data: Array[U8] iso): lori.ReadAction =>
+  fun ref _on_received(data: Array[U8] iso): ReadAction =>
     _state.on_received(this, consume data)
-    lori.KeepReading
+    KeepReading
 
   fun ref _on_closed() =>
     _state.on_closed(this)
 
-  fun ref _on_start_failure(reason: lori.StartFailureReason) =>
+  fun ref _on_start_failure(reason: StartFailureReason) =>
     _state = _Closed
 
   fun ref _on_throttled() =>
@@ -124,19 +124,19 @@ class WebSocketServer is lori.ServerLifecycleEventReceiver
   fun ref _on_unthrottled() =>
     _state.on_unthrottled(this)
 
-  fun ref _on_sent(token: lori.SendToken) =>
+  fun ref _on_sent(token: SendToken) =>
     _state.on_sent(this, token)
 
-  fun ref _on_send_failed(token: lori.SendToken) => None
+  fun ref _on_send_failed(token: SendToken) => None
 
   fun ref _on_idle_timeout() =>
     _state.on_idle_timeout(this)
 
   fun ref _on_tls_ready() => None
 
-  fun ref _on_tls_failure(reason: lori.TLSFailureReason) => None
+  fun ref _on_tls_failure(reason: TLSFailureReason) => None
 
-  fun ref _on_timer(token: lori.TimerToken) => None
+  fun ref _on_timer(token: TimerToken) => None
 
   // -- Internal methods called by state classes --
   fun ref _set_state(state: _ConnectionState) =>
