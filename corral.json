@@ -10,10 +10,5 @@
     "version": "0.10.0",
     "name": "mare"
   },
-  "deps": [
-    {
-      "locator": "github.com/ponylang/ssl.git",
-      "version": "5.0.0"
-    }
-  ]
+  "deps": []
 }
