@@ -41,7 +41,7 @@ make test-one t=TestName ssl=3.0.x  # run a single test by name
 make examples ssl=3.0.x             # examples only
 ```
 
-`ssl=` is required because mare uses `ssl/crypto` for the SHA-1 that computes the WebSocket handshake accept key. Set it to your installed TLS library: `4.0.x`, `3.0.x`, `1.1.x`, or `libressl`.
+`ssl=` is required because mare uses `crypto` for the SHA-1 that computes the WebSocket handshake accept key. Set it to your installed TLS library: `4.0.x`, `3.0.x`, `1.1.x`, or `libressl`.
 
 ## Connection states
 
@@ -58,6 +58,6 @@ A close-handshake timeout looks like a job for net's idle timeout, but that rese
 
 ## Conventions
 
-- Prefer qualified imports (`use crypto = "ssl/crypto"` and so on) when the package defines types that could clash with imported names.
+- Prefer qualified imports (`use crypto = "crypto"` and so on) when the package defines types that could clash with imported names.
 - New test classes go in `_test_*.pony` files, registered in `_test.pony`.
 - `\nodoc\` on test classes.
