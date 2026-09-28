@@ -1,5 +1,4 @@
 use "pony_test"
-use "pony_check"
 
 // -- Example-based tests for _CloseStatusExtractor --
 
@@ -96,7 +95,7 @@ class \nodoc\ _TestOtherCloseCodeType is UnitTest
     h.assert_eq[String val]("3500 Other", c.string())
 
 // -- Property-based tests --
-class \nodoc\ _TestExtractorPropertyNamedCodes is Property1[U16]
+class \nodoc\ _TestExtractorPropertyNamedCodes is Property[U16]
   """All named code values produce their respective primitive."""
 
   fun name(): String => "CloseStatusExtractor/property: named codes"
@@ -129,7 +128,7 @@ class \nodoc\ _TestExtractorPropertyNamedCodes is Property1[U16]
     | let s: CloseInternalError => h.assert_eq[U16](sample, s.code())
     end
 
-class \nodoc\ _TestExtractorPropertyOtherCodes is Property1[U16]
+class \nodoc\ _TestExtractorPropertyOtherCodes is Property[U16]
   """Valid-but-unnamed codes produce OtherCloseCode with matching code()."""
 
   fun name(): String => "CloseStatusExtractor/property: other codes"
@@ -157,7 +156,7 @@ class \nodoc\ _TestExtractorPropertyOtherCodes is Property1[U16]
         " should produce OtherCloseCode but got named primitive")
     end
 
-class \nodoc\ _TestExtractorPropertyRoundtrip is Property1[U16]
+class \nodoc\ _TestExtractorPropertyRoundtrip is Property[U16]
   """All valid close codes roundtrip through extraction."""
 
   fun name(): String => "CloseStatusExtractor/property: roundtrip"
