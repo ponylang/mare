@@ -1,5 +1,4 @@
 use "pony_test"
-use "pony_check"
 
 class \nodoc\ iso _TestUtf8ValidAscii is UnitTest
   """Valid ASCII bytes are accepted."""
@@ -109,7 +108,7 @@ class \nodoc\ iso _TestUtf8InvalidContinuationFirst is UnitTest
     h.assert_false(_Utf8Validator.is_valid(
       recover val [as U8: 0xBF] end))
 
-class \nodoc\ iso _TestUtf8PropertyValidStrings is Property1[String]
+class \nodoc\ iso _TestUtf8PropertyValidStrings is Property[String]
   """Valid Unicode strings encoded as UTF-8 are accepted."""
   fun name(): String => "utf8/property_valid_strings"
 
@@ -120,7 +119,7 @@ class \nodoc\ iso _TestUtf8PropertyValidStrings is Property1[String]
   fun property(sample: String, h: PropertyHelper) =>
     h.assert_true(_Utf8Validator.is_valid(sample.array()))
 
-class \nodoc\ iso _TestUtf8PropertyInvalidByte is Property1[U8]
+class \nodoc\ iso _TestUtf8PropertyInvalidByte is Property[U8]
   """Bytes 0xF5-0xFF at start of sequence are always invalid."""
   fun name(): String => "utf8/property_invalid_lead_byte"
 

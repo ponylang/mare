@@ -1,5 +1,4 @@
 use "pony_test"
-use "pony_check"
 
 actor \nodoc\ Main is TestList
   new create(env: Env) =>
@@ -17,8 +16,8 @@ actor \nodoc\ Main is TestList
     test(_TestUtf8InvalidSurrogate)
     test(_TestUtf8InvalidAboveMax)
     test(_TestUtf8InvalidContinuationFirst)
-    test(Property1UnitTest[String](_TestUtf8PropertyValidStrings))
-    test(Property1UnitTest[U8](_TestUtf8PropertyInvalidByte))
+    test.property(_TestUtf8PropertyValidStrings)
+    test.property(_TestUtf8PropertyInvalidByte)
 
     // Frame encoder
     test(_TestFrameEncoderText)
@@ -28,7 +27,7 @@ actor \nodoc\ Main is TestList
     test(_TestFrameEncoderPong)
     test(_TestFrameEncoderLength16Bit)
     test(_TestFrameEncoderLength64Bit)
-    test(Property1UnitTest[USize](_TestFrameEncoderPropertyRoundtrip))
+    test.property(_TestFrameEncoderPropertyRoundtrip)
 
     // Frame parser
     test(_TestFrameParserText)
@@ -40,9 +39,9 @@ actor \nodoc\ Main is TestList
     test(_TestFrameParserCloseOneByte)
     test(_TestFrameParserCloseInvalidUtf8Reason)
     test(_TestFrameParserCloseValidUtf8Reason)
-    test(Property1UnitTest[U16](_TestFrameParserCloseValidCodes))
-    test(Property1UnitTest[U16](_TestFrameParserCloseInvalidCodes))
-    test(Property1UnitTest[U16](_TestFrameParserCloseMixedCodes))
+    test.property(_TestFrameParserCloseValidCodes)
+    test.property(_TestFrameParserCloseInvalidCodes)
+    test.property(_TestFrameParserCloseMixedCodes)
     test(_TestFrameParserLength16Bit)
     test(_TestFrameParserLength64Bit)
     test(_TestFrameParserLength64BitMsbSet)
@@ -53,7 +52,7 @@ actor \nodoc\ Main is TestList
     test(_TestFrameParserUnknownOpcode)
     test(_TestFrameParserIncremental)
     test(_TestFrameParserMultipleFrames)
-    test(Property1UnitTest[USize](_TestFrameParserPropertyRandom))
+    test.property(_TestFrameParserPropertyRandom)
 
     // Handshake parser
     test(_TestHandshakeValid)
@@ -70,9 +69,9 @@ actor \nodoc\ Main is TestList
     test(_TestHandshakeIncremental)
     test(_TestHandshakeRfc6455AcceptKey)
     test(_TestHandshakeConnectionMultiToken)
-    test(Property1UnitTest[String](_TestHandshakePropertyValidRequests))
-    test(Property1UnitTest[String](_TestHandshakePropertyValidKeys))
-    test(Property1UnitTest[String](_TestHandshakePropertyInvalidKeyLength))
+    test.property(_TestHandshakePropertyValidRequests)
+    test.property(_TestHandshakePropertyValidKeys)
+    test.property(_TestHandshakePropertyInvalidKeyLength)
 
     // Close status extractor
     test(_TestExtractorEmptyPayload)
@@ -83,9 +82,9 @@ actor \nodoc\ Main is TestList
     test(_TestCloseNoStatusReceivedType)
     test(_TestCloseAbnormalClosureType)
     test(_TestOtherCloseCodeType)
-    test(Property1UnitTest[U16](_TestExtractorPropertyNamedCodes))
-    test(Property1UnitTest[U16](_TestExtractorPropertyOtherCodes))
-    test(Property1UnitTest[U16](_TestExtractorPropertyRoundtrip))
+    test.property(_TestExtractorPropertyNamedCodes)
+    test.property(_TestExtractorPropertyOtherCodes)
+    test.property(_TestExtractorPropertyRoundtrip)
 
     // Fragment reassembler
     test(_TestReassemblerSingleText)
@@ -96,4 +95,4 @@ actor \nodoc\ Main is TestList
     test(_TestReassemblerInvalidUtf8)
     test(_TestReassemblerValidUtf8)
     test(_TestReassemblerContinuationWithoutStart)
-    test(Property1UnitTest[USize](_TestReassemblerPropertyRoundtrip))
+    test.property(_TestReassemblerPropertyRoundtrip)

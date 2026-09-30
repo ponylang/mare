@@ -1,5 +1,4 @@
 use "pony_test"
-use "pony_check"
 use "encode/base64"
 
 primitive \nodoc\ _TestHandshakeHelper
@@ -356,7 +355,7 @@ class \nodoc\ iso _TestHandshakeConnectionMultiToken is UnitTest
     | let err: HandshakeError => h.fail("unexpected error: " + err.string())
     end
 
-class \nodoc\ iso _TestHandshakePropertyValidRequests is Property1[String]
+class \nodoc\ iso _TestHandshakePropertyValidRequests is Property[String]
   """Valid upgrade requests with random URIs always parse successfully."""
   fun name(): String => "handshake/property_valid_requests"
 
@@ -376,7 +375,7 @@ class \nodoc\ iso _TestHandshakePropertyValidRequests is Property1[String]
       h.fail("unexpected error for uri: " + test_uri)
     end
 
-class \nodoc\ iso _TestHandshakePropertyValidKeys is Property1[String]
+class \nodoc\ iso _TestHandshakePropertyValidKeys is Property[String]
   """
   Random 16-byte keys, base64-encoded, always produce a successful
   handshake.
@@ -398,7 +397,7 @@ class \nodoc\ iso _TestHandshakePropertyValidKeys is Property1[String]
       h.fail("unexpected error for key: " + key + " — " + err.string())
     end
 
-class \nodoc\ iso _TestHandshakePropertyInvalidKeyLength is Property1[String]
+class \nodoc\ iso _TestHandshakePropertyInvalidKeyLength is Property[String]
   """
   Random byte strings of length != 16, base64-encoded, always produce
   HandshakeInvalidKey.

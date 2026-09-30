@@ -1,5 +1,4 @@
 use "pony_test"
-use "pony_check"
 
 class \nodoc\ iso _TestFrameEncoderText is UnitTest
   """Text frame: FIN=1, opcode=0x1, MASK=0, correct payload."""
@@ -132,7 +131,7 @@ class \nodoc\ iso _TestFrameEncoderLength64Bit is UnitTest
     // Total frame size: 2 + 8 (extended length) + 65536 = 65546
     h.assert_eq[USize](65546, frame.size())
 
-class \nodoc\ iso _TestFrameEncoderPropertyRoundtrip is Property1[USize]
+class \nodoc\ iso _TestFrameEncoderPropertyRoundtrip is Property[USize]
   """Encoded frames can be parsed back through the frame parser."""
   fun name(): String => "frame_encoder/property_roundtrip"
 

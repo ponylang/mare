@@ -1,5 +1,4 @@
 use "pony_test"
-use "pony_check"
 
 primitive \nodoc\ _TestFrameHelper
   """Helpers for building masked WebSocket frames for parser testing."""
@@ -475,7 +474,7 @@ class \nodoc\ iso _TestFrameParserMultipleFrames is UnitTest
     | let err: _FrameError => h.fail("unexpected error")
     end
 
-class \nodoc\ iso _TestFrameParserCloseValidCodes is Property1[U16]
+class \nodoc\ iso _TestFrameParserCloseValidCodes is Property[U16]
   """Valid close status codes are accepted by the frame parser."""
   fun name(): String => "frame_parser/close_valid_codes"
 
@@ -502,7 +501,7 @@ class \nodoc\ iso _TestFrameParserCloseValidCodes is Property1[U16]
       h.fail("unexpected error for code " + code.string())
     end
 
-class \nodoc\ iso _TestFrameParserCloseInvalidCodes is Property1[U16]
+class \nodoc\ iso _TestFrameParserCloseInvalidCodes is Property[U16]
   """Invalid close status codes are rejected by the frame parser."""
   fun name(): String => "frame_parser/close_invalid_codes"
 
@@ -527,7 +526,7 @@ class \nodoc\ iso _TestFrameParserCloseInvalidCodes is Property1[U16]
       h.assert_is[CloseCode](CloseProtocolError, err.code)
     end
 
-class \nodoc\ iso _TestFrameParserCloseMixedCodes is Property1[U16]
+class \nodoc\ iso _TestFrameParserCloseMixedCodes is Property[U16]
   """Close frame parsing succeeds if and only if the code is valid."""
   fun name(): String => "frame_parser/close_mixed_codes"
 
@@ -563,7 +562,7 @@ class \nodoc\ iso _TestFrameParserCloseMixedCodes is Property1[U16]
       h.assert_false(valid, "code " + code.string() + " should be accepted")
     end
 
-class \nodoc\ iso _TestFrameParserPropertyRandom is Property1[USize]
+class \nodoc\ iso _TestFrameParserPropertyRandom is Property[USize]
   """Random valid masked frames parse successfully."""
   fun name(): String => "frame_parser/property_random_frames"
 

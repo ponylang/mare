@@ -1,5 +1,4 @@
 use "pony_test"
-use "pony_check"
 
 class \nodoc\ iso _TestReassemblerSingleText is UnitTest
   """Single unfragmented text message is delivered immediately."""
@@ -155,7 +154,7 @@ class \nodoc\ iso _TestReassemblerContinuationWithoutStart is UnitTest
     | let _: _CompleteMessage => h.fail("expected error")
     end
 
-class \nodoc\ iso _TestReassemblerPropertyRoundtrip is Property1[USize]
+class \nodoc\ iso _TestReassemblerPropertyRoundtrip is Property[USize]
   """Random payloads split into fragments reassemble to original."""
   fun name(): String => "reassembler/property_roundtrip"
 
