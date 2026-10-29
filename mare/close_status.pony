@@ -22,11 +22,11 @@ primitive CloseNoStatusReceived is Stringable
     """
     1005
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1005 No Status Received".clone()
+    "1005 No Status Received"
 
 primitive CloseAbnormalClosure is Stringable
   """
@@ -43,11 +43,11 @@ primitive CloseAbnormalClosure is Stringable
     """
     1006
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1006 Abnormal Closure".clone()
+    "1006 Abnormal Closure"
 
 class val OtherCloseCode is Stringable
   """
@@ -71,8 +71,8 @@ class val OtherCloseCode is Stringable
     """
     _code
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the numeric code.
     """
-    (_code.string() + " Other").clone()
+    _code.string() + " Other"

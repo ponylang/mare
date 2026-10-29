@@ -20,11 +20,11 @@ primitive CloseNormal is Stringable
     """
     1000
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1000 Normal Closure".clone()
+    "1000 Normal Closure"
 
 primitive CloseGoingAway is Stringable
   """
@@ -37,11 +37,11 @@ primitive CloseGoingAway is Stringable
     """
     1001
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1001 Going Away".clone()
+    "1001 Going Away"
 
 primitive CloseProtocolError is Stringable
   """
@@ -54,11 +54,11 @@ primitive CloseProtocolError is Stringable
     """
     1002
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1002 Protocol Error".clone()
+    "1002 Protocol Error"
 
 primitive CloseUnsupportedData is Stringable
   """
@@ -71,11 +71,11 @@ primitive CloseUnsupportedData is Stringable
     """
     1003
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1003 Unsupported Data".clone()
+    "1003 Unsupported Data"
 
 primitive CloseInvalidPayload is Stringable
   """
@@ -88,11 +88,11 @@ primitive CloseInvalidPayload is Stringable
     """
     1007
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1007 Invalid Payload".clone()
+    "1007 Invalid Payload"
 
 primitive ClosePolicyViolation is Stringable
   """
@@ -105,11 +105,11 @@ primitive ClosePolicyViolation is Stringable
     """
     1008
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1008 Policy Violation".clone()
+    "1008 Policy Violation"
 
 primitive CloseMessageTooBig is Stringable
   """
@@ -122,11 +122,11 @@ primitive CloseMessageTooBig is Stringable
     """
     1009
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1009 Message Too Big".clone()
+    "1009 Message Too Big"
 
 primitive CloseInternalError is Stringable
   """
@@ -139,8 +139,8 @@ primitive CloseInternalError is Stringable
     """
     1011
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     """
     Returns a human-readable representation including the code and name.
     """
-    "1011 Internal Error".clone()
+    "1011 Internal Error"
