@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Update to work with ponyc 0.78.0 ([PR #89](https://github.com/ponylang/mare/pull/89))
 
 ## [0.12.0] - 2026-09-30
 
